@@ -1,0 +1,607 @@
+.kioskContainer {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f5f5;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.kioskLayout {
+  display: grid;
+  grid-template-columns: 200px 1fr 350px;
+  gap: 20px;
+  padding: 20px;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Categories Sidebar */
+.categoriesSidebar {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+.sidebarTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e5e5e5;
+}
+
+.categoryButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.categoryButton {
+  padding: 14px 16px;
+  background-color: #f5f5f5;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.categoryButton:hover {
+  background-color: #ebebeb;
+  color: #333;
+}
+
+.categoryButtonActive {
+  background-color: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
+.categoryButtonActive:hover {
+  background-color: #b91c1c;
+}
+
+/* Products Section */
+.productsSection {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+.sectionTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e5e5e5;
+}
+
+.productsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.productCard {
+  background-color: #f9f9f9;
+  border: 2px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.productCard:hover {
+  border-color: #dc2626;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+  transform: translateY(-2px);
+}
+
+.productName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.productPrice {
+  font-size: 18px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.productStock {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.noProducts {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  font-size: 16px;
+}
+
+/* Cart Sidebar */
+.cartSidebar {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cartItems {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+.emptyCart {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+  font-size: 16px;
+}
+
+.cartItem {
+  background-color: #f9f9f9;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.cartItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.cartItemName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+}
+
+.removeButton {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.removeButton:hover {
+  color: #dc2626;
+}
+
+.cartItemMod {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.cartItemFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.quantityControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quantityButton {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #d1d1d1;
+  background-color: #ffffff;
+  border-radius: 4px;
+  font-size: 18px;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.quantityButton:hover {
+  background-color: #f5f5f5;
+  border-color: #999;
+}
+
+.quantity {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 600;
+  color: #333;
+}
+
+.cartItemPrice {
+  font-size: 16px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.cartTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border-top: 2px solid #e5e5e5;
+}
+
+.totalLabel {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.totalAmount {
+  font-size: 24px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+/* Bottom Bar */
+.bottomBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background-color: #ffffff;
+  border-top: 2px solid #e5e5e5;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.logoutButton {
+  padding: 12px 24px;
+  background-color: #666;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.logoutButton:hover {
+  background-color: #555;
+}
+
+.cartActions {
+  display: flex;
+  gap: 12px;
+}
+
+.clearCartButton,
+.checkoutButton {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clearCartButton {
+  background-color: #f5f5f5;
+  color: #666;
+  border: 1px solid #d1d1d1;
+}
+
+.clearCartButton:hover:not(:disabled) {
+  background-color: #ebebeb;
+  border-color: #999;
+}
+
+.clearCartButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.checkoutButton {
+  background-color: #dc2626;
+  color: #ffffff;
+}
+
+.checkoutButton:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
+.checkoutButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Modification Modal */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modalContent {
+  background-color: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 2px solid #e5e5e5;
+}
+
+.modalTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.modalCloseButton {
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.modalCloseButton:hover {
+  color: #333;
+}
+
+.modalBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.modificationSection {
+  margin-bottom: 32px;
+}
+
+.modificationSection:last-child {
+  margin-bottom: 0;
+}
+
+.modificationTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.optionButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.optionButton {
+  padding: 10px 16px;
+  background-color: #f5f5f5;
+  border: 2px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.optionButton:hover {
+  background-color: #ebebeb;
+  border-color: #999;
+}
+
+.optionButtonActive {
+  background-color: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
+.optionButtonActive:hover {
+  background-color: #b91c1c;
+}
+
+.addOnsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.addOnButton {
+  background-color: #f5f5f5;
+  border: 2px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: #666;
+}
+
+.addOnButton:hover {
+  background-color: #ebebeb;
+  border-color: #999;
+}
+
+.addOnButtonActive {
+  background-color: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
+.addOnButtonActive:hover {
+  background-color: #b91c1c;
+}
+
+.addOnName {
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  color: inherit;
+}
+
+.addOnPrice {
+  font-size: 12px;
+  opacity: 0.9;
+  color: inherit;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 2px solid #e5e5e5;
+}
+
+.modalCancelButton,
+.modalAddButton {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modalCancelButton {
+  background-color: #f5f5f5;
+  color: #666;
+  border: 1px solid #d1d1d1;
+}
+
+.modalCancelButton:hover {
+  background-color: #ebebeb;
+  border-color: #999;
+}
+
+.modalAddButton {
+  background-color: #dc2626;
+  color: #ffffff;
+}
+
+.modalAddButton:hover {
+  background-color: #b91c1c;
+}
+
+/* Loading and Error States */
+.loading,
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 18px;
+  color: #666;
+}
+
+.error {
+  color: #dc2626;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .kioskLayout {
+    grid-template-columns: 180px 1fr 300px;
+  }
+}
+
+@media (max-width: 968px) {
+  .kioskLayout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .categoriesSidebar {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 12px;
+  }
+
+  .categoryButtons {
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .categoryButton {
+    white-space: nowrap;
+    padding: 10px 16px;
+  }
+
+  .cartSidebar {
+    max-height: 300px;
+  }
+}
+

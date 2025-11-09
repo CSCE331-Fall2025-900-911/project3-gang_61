@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
 
 export default function Login() {
+  const router = useRouter();
   const [showLogin, setShowLogin] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleGoToKiosk = () => {
-    // TODO: Navigate to kiosk interface
-    console.log("Navigate to kiosk");
+    router.push("/kiosk");
   };
 
   const handleEmailLogin = async (e) => {
