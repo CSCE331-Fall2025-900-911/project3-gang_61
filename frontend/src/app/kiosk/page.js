@@ -18,12 +18,30 @@ const categorizeProduct = (product) => {
   // For drinks, categorize based on name patterns
   if (category === "Drink") {
     // Milk drink indicators
-    const milkIndicators = ["milk tea", "milk", "taro", "matcha", "brown sugar", "pumpkin tea"];
-    const isMilkDrink = milkIndicators.some(indicator => name.includes(indicator));
+    const milkIndicators = [
+      "milk tea",
+      "milk",
+      "taro",
+      "matcha",
+      "brown sugar",
+      "pumpkin tea",
+    ];
+    const isMilkDrink = milkIndicators.some((indicator) =>
+      name.includes(indicator)
+    );
 
     // Fruit drink indicators
-    const fruitIndicators = ["wintermelon", "strawberry", "honey lemonade", "passionfruit", "green tea", "lemonade"];
-    const isFruitDrink = fruitIndicators.some(indicator => name.includes(indicator));
+    const fruitIndicators = [
+      "wintermelon",
+      "strawberry",
+      "honey lemonade",
+      "passionfruit",
+      "green tea",
+      "lemonade",
+    ];
+    const isFruitDrink = fruitIndicators.some((indicator) =>
+      name.includes(indicator)
+    );
 
     // Special cases
     if (name.includes("thai tea")) {
@@ -38,7 +56,9 @@ const categorizeProduct = (product) => {
     } else {
       // Default: if it has "tea" and not explicitly fruit, assume milk drink
       // Otherwise, default to Fruit Drinks
-      return name.includes("tea") && !name.includes("green") ? "Milk Drinks" : "Fruit Drinks";
+      return name.includes("tea") && !name.includes("green")
+        ? "Milk Drinks"
+        : "Fruit Drinks";
     }
   }
 
@@ -56,6 +76,35 @@ export default function KioskPage() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Member and Employee IDs - can come from URL params, localStorage, or default to 0
+  const [memberId, setMemberId] = useState(0);
+  const [employeeId, setEmployeeId] = useState(0);
+
+  // Load member_id and employee_id from URL params or localStorage
+  useEffect(() => {
+    // Check URL search parameters first
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlMemberId = searchParams.get("member_id");
+    const urlEmployeeId = searchParams.get("employee_id");
+
+    // Check localStorage as fallback
+    const storedMemberId = localStorage.getItem("member_id");
+    const storedEmployeeId = localStorage.getItem("employee_id");
+
+    // Set member_id: URL param > localStorage > default (0)
+    if (urlMemberId) {
+      setMemberId(parseInt(urlMemberId) || 0);
+    } else if (storedMemberId) {
+      setMemberId(parseInt(storedMemberId) || 0);
+    }
+
+    // Set employee_id: URL param > localStorage > default (0)
+    if (urlEmployeeId) {
+      setEmployeeId(parseInt(urlEmployeeId) || 0);
+    } else if (storedEmployeeId) {
+      setEmployeeId(parseInt(storedEmployeeId) || 0);
+    }
+  }, []);
 
   // Load products and add-ons from backend
   useEffect(() => {
@@ -64,7 +113,7 @@ export default function KioskPage() {
         setLoading(true);
         const [productsData, addOnsData] = await Promise.all([
           fetchProducts(),
-          fetchAddOns()
+          fetchAddOns(),
         ]);
         setProducts(productsData);
         setAddOns(addOnsData);
@@ -84,10 +133,10 @@ export default function KioskPage() {
     const categorized = {
       "Milk Drinks": [],
       "Fruit Drinks": [],
-      "Sides": []
+      Sides: [],
     };
 
-    products.forEach(product => {
+    products.forEach((product) => {
       const category = categorizeProduct(product);
       if (category && categorized[category]) {
         categorized[category].push(product);
@@ -117,7 +166,7 @@ export default function KioskPage() {
       id: Date.now() + Math.random(), // Unique ID for cart item
       product: product,
       modifications: modifications,
-      quantity: 1
+      quantity: 1,
     };
     setCart([...cart, cartItem]);
     setShowModificationModal(false);
@@ -126,7 +175,7 @@ export default function KioskPage() {
 
   // Remove item from cart
   const removeFromCart = (itemId) => {
-    setCart(cart.filter(item => item.id !== itemId));
+    setCart(cart.filter((item) => item.id !== itemId));
   };
 
   // Update quantity
@@ -135,9 +184,11 @@ export default function KioskPage() {
       removeFromCart(itemId);
       return;
     }
-    setCart(cart.map(item => 
-      item.id === itemId ? { ...item, quantity: newQuantity } : item
-    ));
+    setCart(
+      cart.map((item) =>
+        item.id === itemId ? { ...item, quantity: newQuantity } : item
+      )
+    );
   };
 
   // Clear cart
@@ -149,9 +200,10 @@ export default function KioskPage() {
   const calculateTotal = () => {
     return cart.reduce((total, item) => {
       const productPrice = parseFloat(item.product.price) || 0;
-      const addOnsPrice = item.modifications.addOns?.reduce((sum, addOn) => {
-        return sum + (parseFloat(addOn.price) || 0);
-      }, 0) || 0;
+      const addOnsPrice =
+        item.modifications.addOns?.reduce((sum, addOn) => {
+          return sum + (parseFloat(addOn.price) || 0);
+        }, 0) || 0;
       return total + (productPrice + addOnsPrice) * item.quantity;
     }, 0);
   };
@@ -165,23 +217,35 @@ export default function KioskPage() {
 
     try {
       const orderData = {
-        items: cart.map(item => ({
+        items: cart.map((item) => ({
           product_id: item.product.product_id,
           product_name: item.product.product_name,
           quantity: item.quantity,
           price: item.product.price,
-          modifications: item.modifications
+          modifications: item.modifications,
         })),
         total: calculateTotal(),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        // Get member_id from state (from URL params, localStorage, or default 0) TODO
+        member_id: memberId || 0,
+        // Get employee_id from state (from URL params, localStorage, or default 0) TODO
+        employee_id: employeeId || 0,
       };
 
-      await submitOrder(orderData);
-      alert("Order placed successfully!");
+      const result = await submitOrder(orderData);
+
+      // Show success message with order confirmation if available
+      const successMessage = result.orderId
+        ? `Order placed successfully! Order ID: ${result.orderId}`
+        : result.message || "Order placed successfully!";
+
+      alert(successMessage);
       clearCart();
     } catch (error) {
-      alert("Failed to place order. Please try again.");
-      console.error(error);
+      const errorMessage =
+        error.message || "Failed to place order. Please try again.";
+      alert(errorMessage);
+      console.error("Error submitting order:", error);
     }
   };
 
@@ -213,12 +277,14 @@ export default function KioskPage() {
         <div className={styles.categoriesSidebar}>
           <h2 className={styles.sidebarTitle}>Categories</h2>
           <div className={styles.categoryButtons}>
-            {Object.keys(categorizedProducts).map(category => (
+            {Object.keys(categorizedProducts).map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
                 className={`${styles.categoryButton} ${
-                  selectedCategory === category ? styles.categoryButtonActive : ""
+                  selectedCategory === category
+                    ? styles.categoryButtonActive
+                    : ""
                 }`}
               >
                 {category}
@@ -231,14 +297,16 @@ export default function KioskPage() {
         <div className={styles.productsSection}>
           <h2 className={styles.sectionTitle}>{selectedCategory}</h2>
           <div className={styles.productsGrid}>
-            {categorizedProducts[selectedCategory]?.map(product => (
+            {categorizedProducts[selectedCategory]?.map((product) => (
               <div
                 key={product.product_id}
                 className={styles.productCard}
                 onClick={() => handleProductClick(product)}
               >
                 <div className={styles.productName}>{product.product_name}</div>
-                <div className={styles.productPrice}>${parseFloat(product.price).toFixed(2)}</div>
+                <div className={styles.productPrice}>
+                  ${parseFloat(product.price).toFixed(2)}
+                </div>
                 {product.stock !== undefined && (
                   <div className={styles.productStock}>
                     Stock: {product.stock}
@@ -246,8 +314,11 @@ export default function KioskPage() {
                 )}
               </div>
             ))}
-            {(!categorizedProducts[selectedCategory] || categorizedProducts[selectedCategory].length === 0) && (
-              <div className={styles.noProducts}>No products in this category</div>
+            {(!categorizedProducts[selectedCategory] ||
+              categorizedProducts[selectedCategory].length === 0) && (
+              <div className={styles.noProducts}>
+                No products in this category
+              </div>
             )}
           </div>
         </div>
@@ -259,10 +330,12 @@ export default function KioskPage() {
             {cart.length === 0 ? (
               <div className={styles.emptyCart}>Your cart is empty</div>
             ) : (
-              cart.map(item => (
+              cart.map((item) => (
                 <div key={item.id} className={styles.cartItem}>
                   <div className={styles.cartItemHeader}>
-                    <span className={styles.cartItemName}>{item.product.product_name}</span>
+                    <span className={styles.cartItemName}>
+                      {item.product.product_name}
+                    </span>
                     <button
                       onClick={() => removeFromCart(item.id)}
                       className={styles.removeButton}
@@ -271,36 +344,53 @@ export default function KioskPage() {
                     </button>
                   </div>
                   {item.modifications.iceLevel && (
-                    <div className={styles.cartItemMod}>Ice: {item.modifications.iceLevel}</div>
-                  )}
-                  {item.modifications.sugarLevel && (
-                    <div className={styles.cartItemMod}>Sugar: {item.modifications.sugarLevel}</div>
-                  )}
-                  {item.modifications.addOns && item.modifications.addOns.length > 0 && (
                     <div className={styles.cartItemMod}>
-                      Add-ons: {item.modifications.addOns.map(a => a.product_name).join(", ")}
+                      Ice: {item.modifications.iceLevel}
                     </div>
                   )}
+                  {item.modifications.sugarLevel && (
+                    <div className={styles.cartItemMod}>
+                      Sugar: {item.modifications.sugarLevel}
+                    </div>
+                  )}
+                  {item.modifications.addOns &&
+                    item.modifications.addOns.length > 0 && (
+                      <div className={styles.cartItemMod}>
+                        Add-ons:{" "}
+                        {item.modifications.addOns
+                          .map((a) => a.product_name)
+                          .join(", ")}
+                      </div>
+                    )}
                   <div className={styles.cartItemFooter}>
                     <div className={styles.quantityControls}>
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        onClick={() =>
+                          updateQuantity(item.id, item.quantity - 1)
+                        }
                         className={styles.quantityButton}
                       >
                         −
                       </button>
                       <span className={styles.quantity}>{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() =>
+                          updateQuantity(item.id, item.quantity + 1)
+                        }
                         className={styles.quantityButton}
                       >
                         +
                       </button>
                     </div>
                     <div className={styles.cartItemPrice}>
-                      {`$${(((parseFloat(item.product.price) || 0) + 
-                          (item.modifications.addOns?.reduce((sum, a) => sum + (parseFloat(a.price) || 0), 0) || 0)) * 
-                          item.quantity).toFixed(2)}`}
+                      {`$${(
+                        ((parseFloat(item.product.price) || 0) +
+                          (item.modifications.addOns?.reduce(
+                            (sum, a) => sum + (parseFloat(a.price) || 0),
+                            0
+                          ) || 0)) *
+                        item.quantity
+                      ).toFixed(2)}`}
                     </div>
                   </div>
                 </div>
@@ -310,7 +400,9 @@ export default function KioskPage() {
           {cart.length > 0 && (
             <div className={styles.cartTotal}>
               <div className={styles.totalLabel}>Total:</div>
-              <div className={styles.totalAmount}>${calculateTotal().toFixed(2)}</div>
+              <div className={styles.totalAmount}>
+                ${calculateTotal().toFixed(2)}
+              </div>
             </div>
           )}
         </div>
@@ -348,7 +440,9 @@ export default function KioskPage() {
             setShowModificationModal(false);
             setSelectedProduct(null);
           }}
-          onAddToCart={(modifications) => addToCart(selectedProduct, modifications)}
+          onAddToCart={(modifications) =>
+            addToCart(selectedProduct, modifications)
+          }
         />
       )}
     </div>
@@ -365,10 +459,10 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
   const sugarLevels = ["No Sugar", "Less Sugar", "Regular", "Extra Sugar"];
 
   const toggleAddOn = (addOn) => {
-    setSelectedAddOns(prev => {
-      const exists = prev.find(a => a.product_id === addOn.product_id);
+    setSelectedAddOns((prev) => {
+      const exists = prev.find((a) => a.product_id === addOn.product_id);
       if (exists) {
-        return prev.filter(a => a.product_id !== addOn.product_id);
+        return prev.filter((a) => a.product_id !== addOn.product_id);
       } else {
         return [...prev, addOn];
       }
@@ -379,7 +473,7 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
     onAddToCart({
       iceLevel,
       sugarLevel,
-      addOns: selectedAddOns
+      addOns: selectedAddOns,
     });
   };
 
@@ -388,7 +482,9 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>{product.product_name}</h2>
-          <button onClick={onClose} className={styles.modalCloseButton}>×</button>
+          <button onClick={onClose} className={styles.modalCloseButton}>
+            ×
+          </button>
         </div>
 
         <div className={styles.modalBody}>
@@ -396,7 +492,7 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
           <div className={styles.modificationSection}>
             <h3 className={styles.modificationTitle}>Ice Level</h3>
             <div className={styles.optionButtons}>
-              {iceLevels.map(level => (
+              {iceLevels.map((level) => (
                 <button
                   key={level}
                   onClick={() => setIceLevel(level)}
@@ -414,7 +510,7 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
           <div className={styles.modificationSection}>
             <h3 className={styles.modificationTitle}>Sugar Level</h3>
             <div className={styles.optionButtons}>
-              {sugarLevels.map(level => (
+              {sugarLevels.map((level) => (
                 <button
                   key={level}
                   onClick={() => setSugarLevel(level)}
@@ -432,8 +528,10 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
           <div className={styles.modificationSection}>
             <h3 className={styles.modificationTitle}>Add-ons</h3>
             <div className={styles.addOnsGrid}>
-              {addOns.map(addOn => {
-                const isSelected = selectedAddOns.find(a => a.product_id === addOn.product_id);
+              {addOns.map((addOn) => {
+                const isSelected = selectedAddOns.find(
+                  (a) => a.product_id === addOn.product_id
+                );
                 return (
                   <button
                     key={addOn.product_id}
@@ -443,7 +541,9 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
                     }`}
                   >
                     <div className={styles.addOnName}>{addOn.product_name}</div>
-                    <div className={styles.addOnPrice}>+${parseFloat(addOn.price).toFixed(2)}</div>
+                    <div className={styles.addOnPrice}>
+                      +${parseFloat(addOn.price).toFixed(2)}
+                    </div>
                   </button>
                 );
               })}
@@ -463,4 +563,3 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
     </div>
   );
 }
-
