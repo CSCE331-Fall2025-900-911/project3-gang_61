@@ -1,6 +1,5 @@
-// API utility functions for backend communication
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 /**
  * Fetch all products from the backend database

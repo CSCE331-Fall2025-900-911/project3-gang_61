@@ -5,65 +5,15 @@ import { useRouter } from "next/navigation";
 import { fetchProducts, fetchAddOns, submitOrder } from "@/lib/api";
 import styles from "./kiosk.module.css";
 
-// Helper function to categorize products dynamically
-const categorizeProduct = (product) => {
-  const category = product.category || "";
-  const name = (product.product_name || "").toLowerCase();
-
-  // Sides are straightforward
-  if (category === "Side") {
-    return "Sides";
-  }
-
-  // For drinks, categorize based on name patterns
-  if (category === "Drink") {
-    // Milk drink indicators
-    const milkIndicators = [
-      "milk tea",
-      "milk",
-      "taro",
-      "matcha",
-      "brown sugar",
-      "pumpkin tea",
-    ];
-    const isMilkDrink = milkIndicators.some((indicator) =>
-      name.includes(indicator)
-    );
-
-    // Fruit drink indicators
-    const fruitIndicators = [
-      "wintermelon",
-      "strawberry",
-      "honey lemonade",
-      "passionfruit",
-      "green tea",
-      "lemonade",
-    ];
-    const isFruitDrink = fruitIndicators.some((indicator) =>
-      name.includes(indicator)
-    );
-
-    // Special cases
-    if (name.includes("thai tea")) {
-      // Thai Tea could go either way, defaulting to Milk Drinks
-      return "Milk Drinks";
-    }
-
-    if (isMilkDrink) {
-      return "Milk Drinks";
-    } else if (isFruitDrink) {
-      return "Fruit Drinks";
-    } else {
-      // Default: if it has "tea" and not explicitly fruit, assume milk drink
-      // Otherwise, default to Fruit Drinks
-      return name.includes("tea") && !name.includes("green")
-        ? "Milk Drinks"
-        : "Fruit Drinks";
-    }
-  }
-
-  // Default fallback
-  return null;
+// Map database categories to display categories
+const mapCategoryToDisplay = (dbCategory) => {
+  const categoryMap = {
+    "Milk Drink": "Milk Drinks",
+    "Fruit Drink": "Fruit Drinks",
+    "Seasonal": "Seasonal",
+    "Side": "Sides",
+  };
+  return categoryMap[dbCategory] || null;
 };
 
 export default function KioskPage() {
@@ -106,6 +56,25 @@ export default function KioskPage() {
     }
   }, []);
 
+  // Categorize products using database categories
+  const categorizeProducts = () => {
+    const categorized = {
+      "Milk Drinks": [],
+      "Fruit Drinks": [],
+      "Seasonal": [],
+      "Sides": [],
+    };
+
+    products.forEach((product) => {
+      const displayCategory = mapCategoryToDisplay(product.category);
+      if (displayCategory && categorized[displayCategory]) {
+        categorized[displayCategory].push(product);
+      }
+    });
+
+    return categorized;
+  };
+
   // Load products and add-ons from backend
   useEffect(() => {
     async function loadData() {
@@ -128,34 +97,30 @@ export default function KioskPage() {
     loadData();
   }, []);
 
-  // Categorize products dynamically
-  const categorizeProducts = () => {
-    const categorized = {
-      "Milk Drinks": [],
-      "Fruit Drinks": [],
-      Sides: [],
-    };
-
-    products.forEach((product) => {
-      const category = categorizeProduct(product);
-      if (category && categorized[category]) {
-        categorized[category].push(product);
+  // Set initial selected category to first available category after products load
+  useEffect(() => {
+    if (products.length > 0) {
+      const categorized = categorizeProducts();
+      const availableCategories = Object.keys(categorized).filter(
+        (cat) => categorized[cat].length > 0
+      );
+      if (availableCategories.length > 0 && !availableCategories.includes(selectedCategory)) {
+        setSelectedCategory(availableCategories[0]);
       }
-    });
-
-    return categorized;
-  };
+    }
+  }, [products, selectedCategory]);
 
   const categorizedProducts = categorizeProducts();
 
   // Handle product click
   const handleProductClick = (product) => {
     const category = product.category || "";
-    if (category === "Drink") {
+    // Check if it's a drink category (Milk Drink, Fruit Drink, or Seasonal)
+    if (category === "Milk Drink" || category === "Fruit Drink" || category === "Seasonal") {
       setSelectedProduct(product);
       setShowModificationModal(true);
     } else {
-      // For sides, add directly to cart
+      // For sides and other non-drink items, add directly to cart
       addToCart(product, { iceLevel: null, sugarLevel: null, addOns: [] });
     }
   };
@@ -226,10 +191,9 @@ export default function KioskPage() {
         })),
         total: calculateTotal(),
         timestamp: new Date().toISOString(),
-        // Get member_id from state (from URL params, localStorage, or default 0) TODO
-        member_id: memberId || 0,
-        // Get employee_id from state (from URL params, localStorage, or default 0) TODO
-        employee_id: employeeId || 0,
+        // For kiosk orders, use 0 for member_id and employee_id when no user is logged in
+        member_id: 0,
+        employee_id: 0,
       };
 
       const result = await submitOrder(orderData);
@@ -277,19 +241,21 @@ export default function KioskPage() {
         <div className={styles.categoriesSidebar}>
           <h2 className={styles.sidebarTitle}>Categories</h2>
           <div className={styles.categoryButtons}>
-            {Object.keys(categorizedProducts).map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`${styles.categoryButton} ${
-                  selectedCategory === category
-                    ? styles.categoryButtonActive
-                    : ""
-                }`}
-              >
-                {category}
-              </button>
-            ))}
+            {Object.keys(categorizedProducts)
+              .filter((category) => categorizedProducts[category].length > 0)
+              .map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`${styles.categoryButton} ${
+                    selectedCategory === category
+                      ? styles.categoryButtonActive
+                      : ""
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
           </div>
         </div>
 
