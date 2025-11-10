@@ -46,6 +46,8 @@ router.post("/", async (req, res, next) => {
     }
 
     // Insert order
+    // Kiosk orders are always "complete" since they're self-service
+    // Cashier orders (future) will have employee_id > 0 and may have different statuses
     const orderResult = await client.query(
       `INSERT INTO orders (member_id, employee_id, order_time, order_status)
        VALUES ($1, $2, $3, $4)
@@ -54,7 +56,7 @@ router.post("/", async (req, res, next) => {
         parseInt(member_id),
         parseInt(employee_id),
         timestamp || new Date().toISOString(),
-        "pending",
+        "complete",
       ]
     );
 

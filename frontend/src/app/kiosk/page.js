@@ -26,21 +26,21 @@ export default function KioskPage() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // Member and Employee IDs - can come from URL params, localStorage, or default to 0
+  // Member ID - can come from URL params, localStorage, or default to 0 (guest)
+  // Employee ID is always 0 for kiosk orders (self-service)
   const [memberId, setMemberId] = useState(0);
-  const [employeeId, setEmployeeId] = useState(0);
 
-  // Load member_id, employee_id, and user role from URL params or localStorage
+  // Load member_id from URL params or localStorage
+  // For kiosk orders, employee_id is always 0 (self-service)
   useEffect(() => {
     // Check URL search parameters first
     const searchParams = new URLSearchParams(window.location.search);
     const urlMemberId = searchParams.get("member_id");
-    const urlEmployeeId = searchParams.get("employee_id");
 
     // Check localStorage as fallback
     const storedUser = localStorage.getItem("user");
     const storedMemberId = localStorage.getItem("member_id");
-    const storedEmployeeId = localStorage.getItem("employee_id");
+    const storedUserId = localStorage.getItem("user_id");
 
     // Parse user object from localStorage if available
     let userData = null;
@@ -52,23 +52,17 @@ export default function KioskPage() {
       }
     }
 
-    // Set member_id: URL param > localStorage > user object > default (0)
+    // Set member_id: URL param > localStorage member_id > localStorage user_id > user object > default (0)
     if (urlMemberId) {
       setMemberId(parseInt(urlMemberId) || 0);
     } else if (storedMemberId) {
       setMemberId(parseInt(storedMemberId) || 0);
-    } else if (userData && userData.memberId) {
-      setMemberId(parseInt(userData.memberId) || 0);
+    } else if (storedUserId) {
+      setMemberId(parseInt(storedUserId) || 0);
+    } else if (userData && (userData.user_id || userData.memberId || userData.id)) {
+      setMemberId(parseInt(userData.user_id || userData.memberId || userData.id) || 0);
     }
-
-    // Set employee_id: URL param > localStorage > user object > default (0)
-    if (urlEmployeeId) {
-      setEmployeeId(parseInt(urlEmployeeId) || 0);
-    } else if (storedEmployeeId) {
-      setEmployeeId(parseInt(storedEmployeeId) || 0);
-    } else if (userData && userData.employeeId) {
-      setEmployeeId(parseInt(userData.employeeId) || 0);
-    }
+    // If none found, memberId stays 0 (guest order)
   }, []);
 
   // Categorize products using database categories
@@ -213,10 +207,10 @@ export default function KioskPage() {
         })),
         total: calculateTotal(),
         timestamp: new Date().toISOString(),
-        // Use authenticated user's IDs (from URL params or localStorage, default to 0)
-        // TODO : fetch member id and employee id
+        // For kiosk orders: use logged-in user's ID as member_id, employee_id is always 0 (self-service)
+        // For cashier orders (future): employee_id will be non-zero
         member_id: memberId,
-        employee_id: employeeId,
+        employee_id: 0, // Always 0 for kiosk orders (self-service)
       };
 
       const result = await submitOrder(orderData);
