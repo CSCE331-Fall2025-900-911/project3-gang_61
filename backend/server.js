@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import productsRouter from "./routes/products.js";
 import ordersRouter from "./routes/orders.js";
+import authRouter from "./routes/auth.js";
 import { testConnection } from "./config/database.js";
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.get("/health", (req, res) => {
 // API Routes
 app.use("/api/products", productsRouter);
 app.use("/api/orders", ordersRouter);
+app.use("/api/auth", authRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -56,4 +58,3 @@ async function startServer() {
 }
 
 startServer();
-

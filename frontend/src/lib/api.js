@@ -1,4 +1,3 @@
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 /**
@@ -100,6 +99,32 @@ export async function submitOrder(orderData) {
     }
 
     throw new Error(errorMessage);
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+/**
+ * Authenticate with Google ID token
+ * @param {string} idToken - Google ID token from OAuth
+ * @returns {Promise<Object>} User information including employee_id and member_id
+ * @throws {Error} If authentication fails
+ */
+export async function authenticateWithGoogle(idToken) {
+  const response = await fetch(`${API_BASE_URL}/auth/google`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ idToken }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.error || errorData.message || "Authentication failed"
+    );
   }
 
   const data = await response.json();

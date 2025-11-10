@@ -10,8 +10,8 @@ const mapCategoryToDisplay = (dbCategory) => {
   const categoryMap = {
     "Milk Drink": "Milk Drinks",
     "Fruit Drink": "Fruit Drinks",
-    "Seasonal": "Seasonal",
-    "Side": "Sides",
+    Seasonal: "Seasonal",
+    Side: "Sides",
   };
   return categoryMap[dbCategory] || null;
 };
@@ -30,7 +30,7 @@ export default function KioskPage() {
   const [memberId, setMemberId] = useState(0);
   const [employeeId, setEmployeeId] = useState(0);
 
-  // Load member_id and employee_id from URL params or localStorage
+  // Load member_id, employee_id, and user role from URL params or localStorage
   useEffect(() => {
     // Check URL search parameters first
     const searchParams = new URLSearchParams(window.location.search);
@@ -38,21 +38,36 @@ export default function KioskPage() {
     const urlEmployeeId = searchParams.get("employee_id");
 
     // Check localStorage as fallback
+    const storedUser = localStorage.getItem("user");
     const storedMemberId = localStorage.getItem("member_id");
     const storedEmployeeId = localStorage.getItem("employee_id");
 
-    // Set member_id: URL param > localStorage > default (0)
+    // Parse user object from localStorage if available
+    let userData = null;
+    if (storedUser) {
+      try {
+        userData = JSON.parse(storedUser);
+      } catch (e) {
+        console.error("Error parsing user data from localStorage:", e);
+      }
+    }
+
+    // Set member_id: URL param > localStorage > user object > default (0)
     if (urlMemberId) {
       setMemberId(parseInt(urlMemberId) || 0);
     } else if (storedMemberId) {
       setMemberId(parseInt(storedMemberId) || 0);
+    } else if (userData && userData.memberId) {
+      setMemberId(parseInt(userData.memberId) || 0);
     }
 
-    // Set employee_id: URL param > localStorage > default (0)
+    // Set employee_id: URL param > localStorage > user object > default (0)
     if (urlEmployeeId) {
       setEmployeeId(parseInt(urlEmployeeId) || 0);
     } else if (storedEmployeeId) {
       setEmployeeId(parseInt(storedEmployeeId) || 0);
+    } else if (userData && userData.employeeId) {
+      setEmployeeId(parseInt(userData.employeeId) || 0);
     }
   }, []);
 
@@ -61,8 +76,8 @@ export default function KioskPage() {
     const categorized = {
       "Milk Drinks": [],
       "Fruit Drinks": [],
-      "Seasonal": [],
-      "Sides": [],
+      Seasonal: [],
+      Sides: [],
     };
 
     products.forEach((product) => {
@@ -104,7 +119,10 @@ export default function KioskPage() {
       const availableCategories = Object.keys(categorized).filter(
         (cat) => categorized[cat].length > 0
       );
-      if (availableCategories.length > 0 && !availableCategories.includes(selectedCategory)) {
+      if (
+        availableCategories.length > 0 &&
+        !availableCategories.includes(selectedCategory)
+      ) {
         setSelectedCategory(availableCategories[0]);
       }
     }
@@ -116,7 +134,11 @@ export default function KioskPage() {
   const handleProductClick = (product) => {
     const category = product.category || "";
     // Check if it's a drink category (Milk Drink, Fruit Drink, or Seasonal)
-    if (category === "Milk Drink" || category === "Fruit Drink" || category === "Seasonal") {
+    if (
+      category === "Milk Drink" ||
+      category === "Fruit Drink" ||
+      category === "Seasonal"
+    ) {
       setSelectedProduct(product);
       setShowModificationModal(true);
     } else {
@@ -191,9 +213,10 @@ export default function KioskPage() {
         })),
         total: calculateTotal(),
         timestamp: new Date().toISOString(),
-        // For kiosk orders, use 0 for member_id and employee_id when no user is logged in
-        member_id: 0,
-        employee_id: 0,
+        // Use authenticated user's IDs (from URL params or localStorage, default to 0)
+        // TODO : fetch member id and employee id
+        member_id: memberId,
+        employee_id: employeeId,
       };
 
       const result = await submitOrder(orderData);
