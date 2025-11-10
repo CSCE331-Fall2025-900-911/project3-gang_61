@@ -7,9 +7,7 @@ import styles from "./page.module.css";
 
 export default function Login() {
   const router = useRouter();
-  const [showLogin, setShowLogin] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const googleSignInButtonRef = useRef(null);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
@@ -17,6 +15,7 @@ export default function Login() {
   const handleGoogleSignInSuccess = useCallback(
     async (credentialResponse) => {
       try {
+        setIsLoading(true);
         const { credential } = credentialResponse;
 
         if (!credential) {
@@ -29,21 +28,31 @@ export default function Login() {
         if (response.success && response.user) {
           // Store user info in localStorage
           localStorage.setItem("user", JSON.stringify(response.user));
-          localStorage.setItem("user_id", response.user.userId || "0");
-          localStorage.setItem("member_id", response.user.memberId || "0");
-          localStorage.setItem("employee_id", response.user.employeeId || "0");
-          localStorage.setItem("user_role", response.user.role || "guest");
+          localStorage.setItem("user_role", response.user.role);
+          localStorage.setItem("token", response.token);
 
-          // Redirect to kiosk with user info
-          router.push(
-            `/kiosk?member_id=${response.user.memberId || 0}&employee_id=${
-              response.user.employeeId || 0
-            }`
-          );
+          // Route based on role
+          switch (response.user.role) {
+            case "manager":
+              // Redirect to manager dashboard
+              router.push("/manager");
+              break;
+            case "cashier":
+              // Redirect to cashier view
+              router.push("/cashier");
+              break;
+            case "customer":
+            default:
+              // Redirect to kiosk for regular customers
+              router.push("/kiosk");
+              break;
+          }
         }
       } catch (error) {
         console.error("Authentication error:", error);
         alert(error.message || "Failed to authenticate. Please try again.");
+      } finally {
+        setIsLoading(false);
       }
     },
     [router]
@@ -51,7 +60,7 @@ export default function Login() {
 
   // Load Google Identity Services script
   useEffect(() => {
-    if (!googleClientId || !showLogin) return;
+    if (!googleClientId) return;
 
     const initializeGoogleSignIn = () => {
       if (!window.google?.accounts || !googleClientId) return;
@@ -72,6 +81,9 @@ export default function Login() {
           width: "100%",
         });
       }
+
+      // Optionally show the One Tap prompt
+      window.google.accounts.id.prompt();
     };
 
     // Check if script is already loaded
@@ -91,113 +103,34 @@ export default function Login() {
     return () => {
       // Cleanup is handled by React
     };
-  }, [showLogin, googleClientId, handleGoogleSignInSuccess]);
-
-  const handleGoToKiosk = () => {
-    router.push("/kiosk");
-  };
-
-  const handleEmailLogin = async (e) => {
-    e.preventDefault();
-    // TODO: Replace with Firebase email/password authentication
-    console.log("Email login:", email, password);
-  };
+  }, [googleClientId, handleGoogleSignInSuccess]);
 
   return (
     <div className={styles.page}>
       <div className={styles.container}>
         <h1 className={styles.brand}>Sharetea</h1>
+        <p className={styles.subtitle}>Sign in with your Google account to get started.</p>
 
-        {!showLogin ? (
-          <>
-            <button onClick={handleGoToKiosk} className={styles.kioskButton}>
-              Go To Kiosk
-            </button>
-            <button
-              onClick={() => setShowLogin(true)}
-              className={styles.staffLoginButton}
-            >
-              Login for Cashiers / Managers
-            </button>
-          </>
+        {isLoading ? (
+          <div className={styles.loadingContainer}>
+            <div className={styles.spinner}></div>
+            <p>Authenticating...</p>
+          </div>
         ) : (
           <>
-            <form onSubmit={handleEmailLogin} className={styles.form}>
-              <div className={styles.inputGroup}>
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={styles.input}
-                  required
-                />
-              </div>
-
-              <div className={styles.inputGroup}>
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={styles.input}
-                  required
-                />
-              </div>
-
-              <button type="submit" className={styles.loginButton}>
-                Log In
-              </button>
-            </form>
-
-            <div className={styles.divider}>
-              <span className={styles.dividerText}>or</span>
-            </div>
-
             {googleClientId ? (
               <div
                 ref={googleSignInButtonRef}
                 className={styles.googleSignInContainer}
               ></div>
             ) : (
-              <button
-                onClick={handleGoogleSignInClick}
-                className={styles.googleButton}
-                disabled
-              >
-                <svg
-                  className={styles.googleIcon}
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
-                >
-                  <path
-                    fill="#4285F4"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-                <span>Sign in with Google (Not Configured)</span>
-              </button>
+              <div className={styles.errorContainer}>
+                <p className={styles.errorText}>
+                  Google Sign-In is not configured. Please contact support.
+                </p>
+              </div>
             )}
 
-            <button
-              onClick={() => setShowLogin(false)}
-              className={styles.backButton}
-            >
-              Back
-            </button>
           </>
         )}
       </div>
