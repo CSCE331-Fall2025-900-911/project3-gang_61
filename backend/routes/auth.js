@@ -1,137 +1,140 @@
 import express from "express";
 import { OAuth2Client } from "google-auth-library";
-import { query, getClient } from "../config/database.js";
+import pool from "../db.js";
 
 const router = express.Router();
-
-// Initialize Google OAuth client
-if (!process.env.GOOGLE_CLIENT_ID) {
-  console.warn(
-    "Warning: GOOGLE_CLIENT_ID is not set. Google OAuth will not work."
-  );
-}
-
-const client = process.env.GOOGLE_CLIENT_ID
-  ? new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
-  : null;
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 /**
  * POST /api/auth/google
  * Verify Google ID token and create/update user session
- * Body: { idToken: string }
+ * Body: { credential: string }
  */
-router.post("/google", async (req, res, next) => {
+router.post("/google", async (req, res) => {
   try {
-    if (!client || !process.env.GOOGLE_CLIENT_ID) {
-      return res.status(500).json({
-        error:
-          "Google OAuth is not configured. Please set GOOGLE_CLIENT_ID environment variable.",
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        success: false,
+        message: "No credential provided",
       });
     }
 
-    const { idToken } = req.body;
-
-    if (!idToken) {
-      return res.status(400).json({ error: "ID token is required" });
-    }
-
-    // Verify the Google ID token
+    // Verify Google token
     const ticket = await client.verifyIdToken({
-      idToken,
+      idToken: credential,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
-    const { sub: googleId, email, name } = payload;
+    const email = payload.email;
+    const name = payload.name;
+    const picture = payload.picture;
 
-    let userId = 0;
-    let role = "guest"; // Default role
-    let employeeId = 0;
-    let memberId = 0;
-    let userName = name; // Default to Google name
+    // Check if user exists in employees table
+    const employeeQuery = await pool.query(
+      "SELECT employee_id, name, email, is_manager FROM employees WHERE email = $1",
+      [email]
+    );
 
-    // Check if user exists in the users table
-    try {
-      const userResult = await query(
-        "SELECT user_id, user_name, email, role FROM users WHERE email = $1",
-        [email]
-      );
+    let user;
+    let role;
 
-      if (userResult.rows.length > 0) {
-        const user = userResult.rows[0];
-        userId = user.user_id;
-        userName = user.user_name || name; // Use database name if available, fallback to Google name
-        role = user.role || "member"; // Default to member if role is null
+    if (employeeQuery.rows.length > 0) {
+      // User is an employee (cashier or manager)
+      const employee = employeeQuery.rows[0];
+      role = employee.is_manager ? "manager" : "cashier";
 
-        // Determine if user is an employee (cashier or manager)
-        if (role === "cashier" || role === "manager") {
-          employeeId = user.user_id;
-        }
+      user = {
+        email: employee.email,
+        name: employee.name,
+        role: role,
+        employeeId: employee.employee_id,
+        picture: picture,
+      };
+    } else {
+      // User is not in employees table, check if they're a customer
+      role = "customer";
 
-        // Determine if user is a member
-        // All users in the users table can be considered members, but we'll use role to distinguish
-        if (role === "member" || !role) {
-          memberId = user.user_id;
-        } else if (role === "cashier" || role === "manager") {
-          // Employees can also be members - set memberId to same as userId
-          memberId = user.user_id;
-        }
-      }
-    } catch (error) {
-      console.log("Error querying users table:", error.message);
+      user = {
+        email: email,
+        name: name,
+        role: role,
+        picture: picture,
+      };
     }
 
-    // If no user found in database, assign guest role
-    // You can change this to return an error if you want to restrict access
-    if (!role) {
-      role = "guest";
-      // Optionally, uncomment the line below to restrict access to only registered users:
-      // return res.status(403).json({ error: "User not authorized. Please contact administrator." });
-    }
+    // Generate a simple token (in production, use JWT or proper session management)
+    const token = Buffer.from(`${email}:${Date.now()}`).toString("base64");
 
-    // Return user info with role
     res.json({
       success: true,
-      user: {
-        googleId,
-        email,
-        name: userName, // Use database user_name if available, otherwise Google name
-        userId: userId || 0,
-        employeeId: employeeId || 0,
-        memberId: memberId || 0,
-        role: role || "guest", // 'member', 'cashier', 'manager', or 'guest'
-      },
+      user: user,
+      token: token,
     });
   } catch (error) {
-    console.error("Google authentication error:", error);
-
-    if (error.message && error.message.includes("Token used too early")) {
-      return res.status(400).json({ error: "Token not yet valid" });
-    }
-
-    if (error.message && error.message.includes("Token expired")) {
-      return res.status(400).json({ error: "Token has expired" });
-    }
-
+    console.error("Google auth error:", error);
     res.status(401).json({
-      error: "Invalid token or authentication failed",
-      message: error.message,
+      success: false,
+      message: "Authentication failed",
+      error: error.message,
     });
   }
 });
 
 /**
- * GET /api/auth/me
- * Get current user info (if authenticated via session/token)
- * This is a placeholder - implement session/token verification as needed
+ * GET /api/auth/verify
+ * Verify if a token is valid and return user info
  */
-router.get("/me", async (req, res, next) => {
+router.get("/verify", async (req, res) => {
   try {
-    // TODO: Implement session/token verification
-    // For now, this is a placeholder
-    res.json({ error: "Not implemented" });
+    const token = req.headers.authorization?.replace("Bearer ", "");
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "No token provided",
+      });
+    }
+
+    // TODO: Implement proper token verification
+    // For now, just decode the basic token
+    const decoded = Buffer.from(token, "base64").toString();
+    const [email] = decoded.split(":");
+
+    // Look up user again
+    const employeeQuery = await pool.query(
+      "SELECT employee_id, name, email, is_manager FROM employees WHERE email = $1",
+      [email]
+    );
+
+    if (employeeQuery.rows.length > 0) {
+      const employee = employeeQuery.rows[0];
+      return res.json({
+        success: true,
+        user: {
+          email: employee.email,
+          name: employee.name,
+          role: employee.is_manager ? "manager" : "cashier",
+          employeeId: employee.employee_id,
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      user: {
+        email: email,
+        role: "customer",
+      },
+    });
   } catch (error) {
-    next(error);
+    console.error("Token verification error:", error);
+    res.status(401).json({
+      success: false,
+      message: "Invalid token",
+    });
   }
 });
 
