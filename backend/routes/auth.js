@@ -1,6 +1,6 @@
 import express from "express";
 import { OAuth2Client } from "google-auth-library";
-import pool from "../db.js";
+import { pool } from "../config/database.js";
 
 const router = express.Router();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
