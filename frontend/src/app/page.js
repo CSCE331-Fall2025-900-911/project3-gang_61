@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { authenticateWithGoogle } from "@/lib/api";
 import styles from "./page.module.css";
+import { authenticateWithGoogle } from "@/lib/api";
 
 export default function Login() {
   const router = useRouter();
@@ -11,89 +11,60 @@ export default function Login() {
   const googleSignInButtonRef = useRef(null);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
-  // Handle Google Sign-In success
-  const handleGoogleSignInSuccess = useCallback(
-    async (credentialResponse) => {
+  /**
+   * Handle Google Sign-In success callback (route to /kiosk by default)
+   * This function is called by Google Identity Services when user signs in
+   */
+  const handleGoogleSignIn = useCallback(
+    async (response) => {
+      if (!response.credential) {
+        console.error("No credential in Google Sign-In response");
+        return;
+      }
+
+      setIsLoading(true);
+
       try {
-        setIsLoading(true);
-        const { credential } = credentialResponse;
+        // Authenticate with backend
+        const authResponse = await authenticateWithGoogle(response.credential);
 
-        if (!credential) {
-          throw new Error("No credential received from Google");
-        }
+        if (authResponse.success && authResponse.user) {
+          // Store token in localStorage for future requests
+          if (authResponse.token) {
+            localStorage.setItem("authToken", authResponse.token);
+          }
 
-        // Send the credential (ID token) to the backend for verification
-        const response = await authenticateWithGoogle(credential);
-
-        if (response.success && response.user) {
           // Store user info in localStorage
-          localStorage.setItem("user", JSON.stringify(response.user));
-          localStorage.setItem("user_role", response.user.role);
-          localStorage.setItem("token", response.token);
-          
-          // Store employee_id if user is an employee
-          if (response.user.employeeId) {
-            localStorage.setItem("employee_id", response.user.employeeId.toString());
-          }
+          localStorage.setItem("user", JSON.stringify(authResponse.user));
 
-          // Route based on role
-          switch (response.user.role) {
-            case "manager":
-              // Redirect to manager dashboard
-              router.push("/manager");
-              break;
-            case "cashier":
-              // Redirect to cashier view
-              router.push("/cashier");
-              break;
-            case "customer":
-            default:
-              // Redirect to kiosk for regular customers
-              router.push("/kiosk");
-              break;
+          // Route based on user role
+          const role = authResponse.user.role;
+          if (role === "manager") {
+            router.push("/manager");
+          } else if (role === "cashier") {
+            router.push("/cashier");
+          } else {
+            // Default to kiosk for customers
+            router.push("/kiosk");
           }
+        } else {
+          throw new Error("Authentication failed");
         }
       } catch (error) {
-        console.error("Authentication error:", error);
-        alert(error.message || "Failed to authenticate. Please try again.");
-      } finally {
+        console.error("Google Sign-In error:", error);
+        alert("Sign-in failed. Please try again.");
         setIsLoading(false);
       }
     },
     [router]
   );
 
-  // Load Google Identity Services script
+  /**
+   * Initialize Google Sign-In button
+   * This effect runs when the component mounts
+   */
   useEffect(() => {
-    if (!googleClientId) return;
-
-    const initializeGoogleSignIn = () => {
-      if (!window.google?.accounts || !googleClientId) return;
-
-      window.google.accounts.id.initialize({
-        client_id: googleClientId,
-        callback: handleGoogleSignInSuccess,
-      });
-
-      // Render sign-in button if ref is available
-      if (googleSignInButtonRef.current) {
-        // Clear any existing button
-        googleSignInButtonRef.current.innerHTML = "";
-        window.google.accounts.id.renderButton(googleSignInButtonRef.current, {
-          theme: "outline",
-          size: "large",
-          text: "signin_with",
-          width: "100%",
-        });
-      }
-
-      // Optionally show the One Tap prompt
-      window.google.accounts.id.prompt();
-    };
-
-    // Check if script is already loaded
-    if (window.google?.accounts) {
-      initializeGoogleSignIn();
+    if (!googleClientId || !googleSignInButtonRef.current) {
       return;
     }
 
@@ -102,19 +73,41 @@ export default function Login() {
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
-    script.onload = initializeGoogleSignIn;
-    document.head.appendChild(script);
+
+    script.onload = () => {
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: handleGoogleSignIn,
+        });
+
+        window.google.accounts.id.renderButton(googleSignInButtonRef.current, {
+          type: "standard",
+          theme: "outline",
+          size: "large",
+          text: "signin_with",
+          width: "100%",
+        });
+      }
+    };
+
+    document.body.appendChild(script);
 
     return () => {
-      // Cleanup is handled by React
+      // Cleanup: remove script if component unmounts
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
     };
-  }, [googleClientId, handleGoogleSignInSuccess]);
+  }, [googleClientId, handleGoogleSignIn]);
 
   return (
     <div className={styles.page}>
       <div className={styles.container}>
         <h1 className={styles.brand}>Sharetea</h1>
-        <p className={styles.subtitle}>Sign in with your Google account to get started.</p>
+        <p className={styles.subtitle}>
+          Sign in with your Google account to get started.
+        </p>
 
         {isLoading ? (
           <div className={styles.loadingContainer}>
@@ -124,21 +117,57 @@ export default function Login() {
         ) : (
           <>
             {/* TEMPORARY TESTING BUTTONS - REMOVE WHEN DONE */}
-            <div style={{ marginBottom: "24px", paddingBottom: "24px", borderBottom: "1px solid #e5e5e5" }}>
+            <div
+              style={{
+                marginBottom: "24px",
+                paddingBottom: "24px",
+                borderBottom: "1px solid #e5e5e5",
+              }}
+            >
               <button
-                style={{ width: "100%", padding: "12px", marginBottom: "8px", cursor: "pointer", borderRadius: "8px", border: "1px solid #ddd", background: "#f5f5f5", color: "#333", fontSize: "16px" }}
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  marginBottom: "8px",
+                  cursor: "pointer",
+                  borderRadius: "8px",
+                  border: "1px solid #ddd",
+                  background: "#f5f5f5",
+                  color: "#333",
+                  fontSize: "16px",
+                }}
                 onClick={() => router.push("/kiosk")}
               >
                 Kiosk
               </button>
               <button
-                style={{ width: "100%", padding: "12px", marginBottom: "8px", cursor: "pointer", borderRadius: "8px", border: "1px solid #ddd", background: "#f5f5f5", color: "#333", fontSize: "16px" }}
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  marginBottom: "8px",
+                  cursor: "pointer",
+                  borderRadius: "8px",
+                  border: "1px solid #ddd",
+                  background: "#f5f5f5",
+                  color: "#333",
+                  fontSize: "16px",
+                }}
                 onClick={() => router.push("/cashier")}
               >
                 Cashier
               </button>
               <button
-                style={{ width: "100%", padding: "12px", marginBottom: "8px", cursor: "not-allowed", borderRadius: "8px", border: "1px solid #ddd", background: "#f5f5f5", color: "#333", fontSize: "16px" }}
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  marginBottom: "8px",
+                  cursor: "not-allowed",
+                  borderRadius: "8px",
+                  border: "1px solid #ddd",
+                  background: "#f5f5f5",
+                  color: "#333",
+                  fontSize: "16px",
+                }}
                 disabled
               >
                 Manager
@@ -158,7 +187,6 @@ export default function Login() {
                 </p>
               </div>
             )}
-
           </>
         )}
       </div>

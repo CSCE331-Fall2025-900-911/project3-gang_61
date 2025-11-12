@@ -106,25 +106,33 @@ export async function submitOrder(orderData) {
 }
 
 /**
- * Authenticate with Google ID token
- * @param {string} idToken - Google ID token from OAuth
- * @returns {Promise<Object>} User information including employee_id and member_id
- * @throws {Error} If authentication fails
+ * Authenticate with Google Sign-In
+ * @param {string} credential - Google ID token credential
+ * @returns {Promise<Object>} Response containing user info and token
+ * @throws {Error} If the request fails
  */
-export async function authenticateWithGoogle(idToken) {
+export async function authenticateWithGoogle(credential) {
   const response = await fetch(`${API_BASE_URL}/auth/google`, {
+    //go to auth.js and see post route for google
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ idToken }),
+    body: JSON.stringify({ credential }),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.error || errorData.message || "Authentication failed"
-    );
+    const errorText = await response.text();
+    let errorMessage = `Failed to authenticate: ${response.status} ${response.statusText}`;
+
+    try {
+      const errorData = JSON.parse(errorText);
+      errorMessage = errorData.message || errorData.error || errorMessage;
+    } catch (e) {
+      errorMessage = `${errorMessage} - ${errorText}`;
+    }
+
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();
