@@ -32,35 +32,31 @@ router.post("/google", async (req, res) => {
     const name = payload.name;
     const picture = payload.picture;
 
-    // Check if user exists in employees table
-    const employeeQuery = await pool.query(
-      "SELECT employee_id, name, email, is_manager FROM employees WHERE email = $1",
+    // Check if user exists in users table
+    const userQuery = await pool.query(
+      "SELECT user_id, user_name, email, role FROM users WHERE email = $1",
       [email]
     );
 
     let user;
-    let role;
 
-    if (employeeQuery.rows.length > 0) {
-      // User is an employee (cashier or manager)
-      const employee = employeeQuery.rows[0];
-      role = employee.is_manager ? "manager" : "cashier";
+    if (userQuery.rows.length > 0) {
+      // User is in the table (cashier or manager or member)
+      const employee = userQuery.rows[0];
 
       user = {
-        email: employee.email,
+        employeeId: employee.user_id,
         name: employee.name,
-        role: role,
-        employeeId: employee.employee_id,
+        email: employee.email,
+        role: employee.role,
         picture: picture,
       };
     } else {
-      // User is not in employees table, check if they're a customer
-      role = "customer";
-
+      // User is not in employees table, they are a guest
       user = {
         email: email,
         name: name,
-        role: role,
+        role: "guest",
         picture: picture,
       };
     }
@@ -104,20 +100,20 @@ router.get("/verify", async (req, res) => {
     const [email] = decoded.split(":");
 
     // Look up user again
-    const employeeQuery = await pool.query(
-      "SELECT employee_id, name, email, is_manager FROM employees WHERE email = $1",
+    const userQuery = await pool.query(
+      "SELECT user_id, user_name, email, role FROM users WHERE email = $1",
       [email]
     );
 
-    if (employeeQuery.rows.length > 0) {
-      const employee = employeeQuery.rows[0];
+    if (userQuery.rows.length > 0) {
+      const employee = userQuery.rows[0];
       return res.json({
         success: true,
         user: {
           email: employee.email,
           name: employee.name,
-          role: employee.is_manager ? "manager" : "cashier",
-          employeeId: employee.employee_id,
+          role: employee.role,
+          employeeId: employee.user_id,
         },
       });
     }
