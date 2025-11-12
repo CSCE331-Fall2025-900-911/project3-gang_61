@@ -30,6 +30,11 @@ export default function Login() {
           localStorage.setItem("user", JSON.stringify(response.user));
           localStorage.setItem("user_role", response.user.role);
           localStorage.setItem("token", response.token);
+          
+          // Store employee_id if user is an employee
+          if (response.user.employeeId) {
+            localStorage.setItem("employee_id", response.user.employeeId.toString());
+          }
 
           // Route based on role
           switch (response.user.role) {
@@ -127,8 +132,8 @@ export default function Login() {
                 Kiosk
               </button>
               <button
-                style={{ width: "100%", padding: "12px", marginBottom: "8px", cursor: "not-allowed", borderRadius: "8px", border: "1px solid #ddd", background: "#f5f5f5", color: "#333", fontSize: "16px" }}
-                disabled
+                style={{ width: "100%", padding: "12px", marginBottom: "8px", cursor: "pointer", borderRadius: "8px", border: "1px solid #ddd", background: "#f5f5f5", color: "#333", fontSize: "16px" }}
+                onClick={() => router.push("/cashier")}
               >
                 Cashier
               </button>
