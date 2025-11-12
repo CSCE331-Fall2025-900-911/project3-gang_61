@@ -118,6 +118,29 @@ export default function Login() {
           </div>
         ) : (
           <>
+            {/* TEMPORARY TESTING BUTTONS - REMOVE WHEN DONE */}
+            <div style={{ marginBottom: "24px", paddingBottom: "24px", borderBottom: "1px solid #e5e5e5" }}>
+              <button
+                style={{ width: "100%", padding: "12px", marginBottom: "8px", cursor: "pointer", borderRadius: "8px", border: "1px solid #ddd", background: "#f5f5f5", color: "#333", fontSize: "16px" }}
+                onClick={() => router.push("/kiosk")}
+              >
+                Kiosk
+              </button>
+              <button
+                style={{ width: "100%", padding: "12px", marginBottom: "8px", cursor: "not-allowed", borderRadius: "8px", border: "1px solid #ddd", background: "#f5f5f5", color: "#333", fontSize: "16px" }}
+                disabled
+              >
+                Cashier
+              </button>
+              <button
+                style={{ width: "100%", padding: "12px", marginBottom: "8px", cursor: "not-allowed", borderRadius: "8px", border: "1px solid #ddd", background: "#f5f5f5", color: "#333", fontSize: "16px" }}
+                disabled
+              >
+                Manager
+              </button>
+            </div>
+            {/* END TEMPORARY TESTING BUTTONS */}
+
             {googleClientId ? (
               <div
                 ref={googleSignInButtonRef}
