@@ -26,16 +26,17 @@ export default function Login() {
 
       try {
         // Authenticate with backend
+
         const authResponse = await authenticateWithGoogle(response.credential);
 
         if (authResponse.success && authResponse.user) {
-          // Store token in localStorage for future requests
+          // Store token in sessionStorage for future requests
           if (authResponse.token) {
-            localStorage.setItem("authToken", authResponse.token);
+            sessionStorage.setItem("authToken", authResponse.token);
           }
 
-          // Store user info in localStorage
-          localStorage.setItem("user", JSON.stringify(authResponse.user));
+          // Store user info in sessionStorage
+          sessionStorage.setItem("user", JSON.stringify(authResponse.user));
 
           // Route based on user role
           const role = authResponse.user.role;
@@ -136,7 +137,15 @@ export default function Login() {
                   color: "#333",
                   fontSize: "16px",
                 }}
-                onClick={() => router.push("/kiosk")}
+                onClick={() => {
+                  // Set test auth data for testing purposes
+                  sessionStorage.setItem("authToken", "test-token");
+                  sessionStorage.setItem(
+                    "user",
+                    JSON.stringify({ role: "guest", email: "test@test.com" })
+                  );
+                  router.push("/kiosk");
+                }}
               >
                 Kiosk
               </button>
@@ -152,7 +161,18 @@ export default function Login() {
                   color: "#333",
                   fontSize: "16px",
                 }}
-                onClick={() => router.push("/cashier")}
+                onClick={() => {
+                  // Set test auth data for testing purposes
+                  sessionStorage.setItem("authToken", "test-token");
+                  sessionStorage.setItem(
+                    "user",
+                    JSON.stringify({
+                      role: "cashier",
+                      email: "cashier@test.com",
+                    })
+                  );
+                  router.push("/cashier");
+                }}
               >
                 Cashier
               </button>
@@ -161,14 +181,25 @@ export default function Login() {
                   width: "100%",
                   padding: "12px",
                   marginBottom: "8px",
-                  cursor: "not-allowed",
+                  cursor: "pointer",
                   borderRadius: "8px",
                   border: "1px solid #ddd",
                   background: "#f5f5f5",
                   color: "#333",
                   fontSize: "16px",
                 }}
-                disabled
+                onClick={() => {
+                  // Set test auth data for testing purposes
+                  sessionStorage.setItem("authToken", "test-token");
+                  sessionStorage.setItem(
+                    "user",
+                    JSON.stringify({
+                      role: "manager",
+                      email: "manager@test.com",
+                    })
+                  );
+                  router.push("/manager");
+                }}
               >
                 Manager
               </button>

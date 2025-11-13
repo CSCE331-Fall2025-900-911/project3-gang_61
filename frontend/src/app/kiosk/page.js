@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { fetchProducts, fetchAddOns, submitOrder } from "@/lib/api";
 import { logout } from "@/lib/auth";
+import { useRequireAuth } from "@/lib/useAuth";
 import styles from "./kiosk.module.css";
 
 // Map database categories to display categories
@@ -27,33 +28,34 @@ export default function KioskPage() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // Member ID - can come from URL params, localStorage, or default to 0 (guest)
-  // Employee ID is always 0 for kiosk orders (self-service)
   const [memberId, setMemberId] = useState(0);
 
-  // Load member_id from URL params or localStorage
+  // Verify that the user logged in through sign-in services
+  useRequireAuth(router);
+
+  // Load member_id from URL params or sessionStorage (optional, for guest orders)
   // For kiosk orders, employee_id is always 0 (self-service)
   useEffect(() => {
     // Check URL search parameters first
     const searchParams = new URLSearchParams(window.location.search);
     const urlMemberId = searchParams.get("member_id");
 
-    // Check localStorage as fallback
-    const storedUser = localStorage.getItem("user");
-    const storedMemberId = localStorage.getItem("member_id");
-    const storedUserId = localStorage.getItem("user_id");
+    // Check sessionStorage as fallback
+    const storedUser = sessionStorage.getItem("user");
+    const storedMemberId = sessionStorage.getItem("member_id");
+    const storedUserId = sessionStorage.getItem("user_id");
 
-    // Parse user object from localStorage if available
+    // Parse user object from sessionStorage if available
     let userData = null;
     if (storedUser) {
       try {
         userData = JSON.parse(storedUser);
       } catch (e) {
-        console.error("Error parsing user data from localStorage:", e);
+        console.error("Error parsing user data from sessionStorage:", e);
       }
     }
 
-    // Set member_id: URL param > localStorage member_id > localStorage user_id > user object > default (0)
+    // Set member_id: URL param > sessionStorage member_id > sessionStorage user_id > user object > default (0)
     if (urlMemberId) {
       setMemberId(parseInt(urlMemberId) || 0);
     } else if (storedMemberId) {

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { fetchProducts, fetchAddOns, submitOrder } from "@/lib/api";
 import { logout } from "@/lib/auth";
+import { useRequireAuth } from "@/lib/useAuth";
 import styles from "./manager.module.css";
 
 // Map database categories to display categories
@@ -29,54 +30,8 @@ export default function CashierPage() {
   const [memberId, setMemberId] = useState(0);
   const [employeeId, setEmployeeId] = useState(0);
 
-  // Load member_id and employee_id from URL params or localStorage
-  useEffect(() => {
-    // Check URL search parameters first
-    const searchParams = new URLSearchParams(window.location.search);
-    const urlMemberId = searchParams.get("member_id");
-    const urlEmployeeId = searchParams.get("employee_id");
-
-    // Check localStorage as fallback
-    const storedUser = localStorage.getItem("user");
-    const storedMemberId = localStorage.getItem("member_id");
-    const storedUserId = localStorage.getItem("user_id");
-    const storedEmployeeId = localStorage.getItem("employee_id");
-
-    // Parse user object from localStorage if available
-    let userData = null;
-    if (storedUser) {
-      try {
-        userData = JSON.parse(storedUser);
-      } catch (e) {
-        console.error("Error parsing user data from localStorage:", e);
-      }
-    }
-
-    // Set member_id: URL param > localStorage member_id > localStorage user_id > user object > default (0)
-    if (urlMemberId) {
-      setMemberId(parseInt(urlMemberId) || 0);
-    } else if (storedMemberId) {
-      setMemberId(parseInt(storedMemberId) || 0);
-    } else if (storedUserId) {
-      setMemberId(parseInt(storedUserId) || 0);
-    } else if (
-      userData &&
-      (userData.user_id || userData.memberId || userData.id)
-    ) {
-      setMemberId(
-        parseInt(userData.user_id || userData.memberId || userData.id) || 0
-      );
-    }
-
-    // Set employee_id: URL param > localStorage employee_id > user object > default (0)
-    if (urlEmployeeId) {
-      setEmployeeId(parseInt(urlEmployeeId) || 0);
-    } else if (storedEmployeeId) {
-      setEmployeeId(parseInt(storedEmployeeId) || 0);
-    } else if (userData && (userData.employeeId || userData.employee_id)) {
-      setEmployeeId(parseInt(userData.employeeId || userData.employee_id) || 0);
-    }
-  }, []);
+  // Verify that the user logged in through sign-in services
+  useRequireAuth(router);
 
   // Categorize products using database categories
   const categorizeProducts = () => {
