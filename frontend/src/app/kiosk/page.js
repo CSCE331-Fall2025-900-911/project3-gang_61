@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { fetchProducts, fetchAddOns, submitOrder } from "@/lib/api";
+import { logout } from "@/lib/auth";
 import styles from "./kiosk.module.css";
 
 // Map database categories to display categories
@@ -59,8 +60,13 @@ export default function KioskPage() {
       setMemberId(parseInt(storedMemberId) || 0);
     } else if (storedUserId) {
       setMemberId(parseInt(storedUserId) || 0);
-    } else if (userData && (userData.user_id || userData.memberId || userData.id)) {
-      setMemberId(parseInt(userData.user_id || userData.memberId || userData.id) || 0);
+    } else if (
+      userData &&
+      (userData.user_id || userData.memberId || userData.id)
+    ) {
+      setMemberId(
+        parseInt(userData.user_id || userData.memberId || userData.id) || 0
+      );
     }
     // If none found, memberId stays 0 (guest order)
   }, []);
@@ -232,7 +238,7 @@ export default function KioskPage() {
 
   // Handle logout
   const handleLogout = () => {
-    router.push("/");
+    logout(router);
   };
 
   if (loading) {

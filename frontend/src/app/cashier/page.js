@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { fetchProducts, fetchAddOns, submitOrder } from "@/lib/api";
+import { logout } from "@/lib/auth";
 import styles from "./cashier.module.css";
 
 // Map database categories to display categories
@@ -58,8 +59,13 @@ export default function CashierPage() {
       setMemberId(parseInt(storedMemberId) || 0);
     } else if (storedUserId) {
       setMemberId(parseInt(storedUserId) || 0);
-    } else if (userData && (userData.user_id || userData.memberId || userData.id)) {
-      setMemberId(parseInt(userData.user_id || userData.memberId || userData.id) || 0);
+    } else if (
+      userData &&
+      (userData.user_id || userData.memberId || userData.id)
+    ) {
+      setMemberId(
+        parseInt(userData.user_id || userData.memberId || userData.id) || 0
+      );
     }
 
     // Set employee_id: URL param > localStorage employee_id > user object > default (0)
@@ -225,7 +231,7 @@ export default function CashierPage() {
 
   // Handle logout
   const handleLogout = () => {
-    router.push("/");
+    logout(router);
   };
 
   if (loading) {
@@ -251,10 +257,7 @@ export default function CashierPage() {
         <div className={styles.productsSection}>
           <div className={styles.productsScrollContainer}>
             {availableCategories.map((category) => (
-              <div
-                key={category}
-                className={styles.categorySection}
-              >
+              <div key={category} className={styles.categorySection}>
                 <h2 className={styles.categoryTitle}>{category}</h2>
                 <div className={styles.productsGrid}>
                   {categorizedProducts[category]?.map((product) => (
@@ -525,4 +528,3 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
     </div>
   );
 }
-
