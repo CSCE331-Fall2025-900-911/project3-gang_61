@@ -42,31 +42,60 @@
 }
 
 .categoryButton {
-  padding: 14px 16px;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 12px;
   background-color: #f5f5f5;
   border: 2px solid transparent;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
-  color: #666;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
-  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .categoryButton:hover {
-  background-color: #ebebeb;
-  color: #333;
+  background-color: #e0e0e0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .categoryButtonActive {
-  background-color: #dc2626;
-  color: #ffffff;
-  border-color: #dc2626;
+  background-color: #6a6a6a;
+  border-color: #6a6a6a;
+  box-shadow: 0 4px 12px rgba(106, 106, 106, 0.3);
 }
 
 .categoryButtonActive:hover {
-  background-color: #b91c1c;
+  background-color: #5a5a5a;
+}
+
+.categoryImageContainer {
+  width: 100%;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  min-height: 0;
+}
+
+.categoryImage {
+  border-radius: 8px;
+}
+
+.categoryText {
+  font-size: 18px;
+  font-weight: 600;
+  color: #666;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.categoryButtonActive .categoryText {
+  color: #ffffff;
 }
 
 /* Products Section */
@@ -596,8 +625,9 @@
   }
 
   .categoryButton {
-    white-space: nowrap;
-    padding: 10px 16px;
+    min-width: 100px;
+    aspect-ratio: 1;
+    padding: 8px;
   }
 
   .cartSidebar {

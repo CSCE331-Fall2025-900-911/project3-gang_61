@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { fetchProducts, fetchAddOns, submitOrder } from "@/lib/api";
 import { logout } from "@/lib/auth";
 import { useRequireAuth } from "@/lib/useAuth";
@@ -16,6 +17,19 @@ const mapCategoryToDisplay = (dbCategory) => {
     Side: "Sides",
   };
   return categoryMap[dbCategory] || null;
+};
+
+// Map display categories to image paths
+const getCategoryImage = (category) => {
+  const imageMap = {
+    "Milk Drinks": "/categories/milk.png",
+    "Fruit Drinks": "/categories/fruit.png",
+    Seasonal: "/categories/seasonal.png",
+    Sides: "/categories/sides.png",
+  };
+  const basePath = imageMap[category];
+  // Add cache-busting query parameter to force reload of updated images
+  return basePath ? `${basePath}?v=${Date.now()}` : null;
 };
 
 export default function KioskPage() {
@@ -268,19 +282,34 @@ export default function KioskPage() {
           <div className={styles.categoryButtons}>
             {Object.keys(categorizedProducts)
               .filter((category) => categorizedProducts[category].length > 0)
-              .map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`${styles.categoryButton} ${
-                    selectedCategory === category
-                      ? styles.categoryButtonActive
-                      : ""
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+              .map((category) => {
+                const imagePath = getCategoryImage(category);
+                return (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`${styles.categoryButton} ${
+                      selectedCategory === category
+                        ? styles.categoryButtonActive
+                        : ""
+                    }`}
+                  >
+                    {imagePath && (
+                      <div className={styles.categoryImageContainer}>
+                        <Image
+                          src={imagePath}
+                          alt={category}
+                          fill
+                          className={styles.categoryImage}
+                          style={{ objectFit: 'contain' }}
+                          unoptimized
+                        />
+                      </div>
+                    )}
+                    <span className={styles.categoryText}>{category}</span>
+                  </button>
+                );
+              })}
           </div>
         </div>
 
