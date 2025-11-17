@@ -1,5 +1,4 @@
-// Normalize API_BASE_URL - remove trailing slashes to prevent double slashes in URLs
-const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL;
 const API_BASE_URL = rawApiUrl.replace(/\/+$/, '');
 
 // Helper function to build API URLs safely

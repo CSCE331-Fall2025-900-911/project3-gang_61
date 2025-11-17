@@ -20,6 +20,19 @@ const mapCategoryToDisplay = (dbCategory) => {
   return categoryMap[dbCategory] || null;
 };
 
+// Map display categories to image paths
+const getCategoryImage = (category) => {
+  const imageMap = {
+    "Milk Drinks": "/categories/milk.png",
+    "Fruit Drinks": "/categories/fruit.png",
+    Seasonal: "/categories/seasonal.png",
+    Sides: "/categories/sides.png",
+  };
+  const basePath = imageMap[category];
+  // Add cache-busting query parameter to force reload of updated images
+  return basePath ? `${basePath}?v=${Date.now()}` : null;
+};
+
 export default function KioskPage() {
   const router = useRouter();
   const [products, setProducts] = useState([]);
@@ -270,19 +283,34 @@ export default function KioskPage() {
           <div className={styles.categoryButtons}>
             {Object.keys(categorizedProducts)
               .filter((category) => categorizedProducts[category].length > 0)
-              .map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`${styles.categoryButton} ${
-                    selectedCategory === category
-                      ? styles.categoryButtonActive
-                      : ""
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+              .map((category) => {
+                const imagePath = getCategoryImage(category);
+                return (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`${styles.categoryButton} ${
+                      selectedCategory === category
+                        ? styles.categoryButtonActive
+                        : ""
+                    }`}
+                  >
+                    {imagePath && (
+                      <div className={styles.categoryImageContainer}>
+                        <Image
+                          src={imagePath}
+                          alt={category}
+                          fill
+                          className={styles.categoryImage}
+                          style={{ objectFit: 'contain' }}
+                          unoptimized
+                        />
+                      </div>
+                    )}
+                    <span className={styles.categoryText}>{category}</span>
+                  </button>
+                );
+              })}
           </div>
         </div>
 
@@ -497,6 +525,13 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
         </div>
 
         <div className={styles.modalBody}>
+          {/* Product Description */}
+          {product.description && (
+            <div className={styles.productDescription}>
+              {product.description}
+            </div>
+          )}
+          
           {/* Ice Level Selection */}
           <div className={styles.modificationSection}>
             <h3 className={styles.modificationTitle}>Ice Level</h3>
@@ -542,18 +577,29 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
                   (a) => a.product_id === addOn.product_id
                 );
                 return (
-                  <button
-                    key={addOn.product_id}
-                    onClick={() => toggleAddOn(addOn)}
-                    className={`${styles.addOnButton} ${
-                      isSelected ? styles.addOnButtonActive : ""
-                    }`}
-                  >
-                    <div className={styles.addOnName}>{addOn.product_name}</div>
-                    <div className={styles.addOnPrice}>
-                      +${parseFloat(addOn.price).toFixed(2)}
-                    </div>
-                  </button>
+                  <div key={addOn.product_id} className={styles.addOnWrapper}>
+                    <button
+                      onClick={() => toggleAddOn(addOn)}
+                      className={`${styles.addOnButton} ${
+                        isSelected ? styles.addOnButtonActive : ""
+                      }`}
+                    >
+                      <div className={styles.addOnName}>{addOn.product_name}</div>
+                      <div className={styles.addOnPrice}>
+                        +${parseFloat(addOn.price).toFixed(2)}
+                      </div>
+                    </button>
+                    {addOn.description && (
+                      <>
+                        <div className={styles.addOnInfoContainer}>
+                          <span className={styles.addOnInfoIcon}>i</span>
+                        </div>
+                        <div className={styles.addOnTooltip}>
+                          {addOn.description}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 );
               })}
             </div>
