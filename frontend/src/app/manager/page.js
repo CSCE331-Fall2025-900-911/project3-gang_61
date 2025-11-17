@@ -2,17 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  fetchProducts,
-  fetchAddOns,
+import Image from "next/image";
+import { 
+  fetchProducts, 
+  fetchAddOns, 
   submitOrder,
   fetchUsers,
   createUser,
   updateUser,
-  deleteUser,
+  deleteUser
 } from "@/lib/api";
 import { logout } from "@/lib/auth";
 import { useRequireAuth } from "@/lib/useAuth";
+import AccessibilityMenu from "@/components/AccessibilityMenu";
 import styles from "./manager.module.css";
 
 // Map database categories to display categories
@@ -237,7 +239,7 @@ export default function CashierPage() {
   }
 
   return (
-    <div className={styles.cashierContainer}>
+    <div className={styles.managerContainer}>
       <div className={styles.cashierLayout}>
         {/* Products Section - All Products (Scrollable) */}
         <div className={styles.productsSection}>
@@ -361,30 +363,68 @@ export default function CashierPage() {
 
       {/* Bottom Bar - Action Buttons */}
       <div className={styles.bottomBar}>
-        <button onClick={handleLogout} className={styles.logoutButton}>
-          Logout
-        </button>
-        {/* User table button */}
-        <button
-          onClick={handleUserTableClick}
-          className={styles.userTableButton}
-        >
-          User Table
-        </button>
+        <div className={styles.leftActions}>
+          <AccessibilityMenu />
+          <button 
+            onClick={handleLogout} 
+            className={styles.logoutIconButton}
+            aria-label="Logout"
+            title="Logout"
+          >
+            <Image
+              src="/logout.svg"
+              alt="Logout"
+              width={28}
+              height={28}
+            />
+          </button>
+          <div className={styles.divider}></div>
+          <div className={styles.managerActions}>
+            <button 
+              onClick={handleUserTableClick} 
+              className={styles.userTableButton}
+              title="Manage Users"
+            >
+              Users Table
+            </button>
+            <button 
+              onClick={() => {/* TODO: Implement inventory table */}} 
+              className={styles.inventoryTableButton}
+              title="Manage Inventory"
+            >
+              Inventory Table
+            </button>
+            <button 
+              onClick={() => {/* TODO: Implement reports */}} 
+              className={styles.reportsButton}
+              title="View Reports"
+            >
+              Reports
+            </button>
+          </div>
+        </div>
         <div className={styles.cartActions}>
           <button
             onClick={clearCart}
-            className={styles.clearCartButton}
+            className={styles.deleteIconButton}
             disabled={cart.length === 0}
+            aria-label="Clear Cart"
+            title="Clear Cart"
           >
-            Clear Cart
+            <Image
+              src="/delete.svg"
+              alt="Clear Cart"
+              width={28}
+              height={28}
+            />
           </button>
           <button
             onClick={handleCheckout}
             className={styles.checkoutButton}
             disabled={cart.length === 0}
+            title="Complete Order"
           >
-            Checkout
+            Checkout (${calculateTotal().toFixed(2)})
           </button>
         </div>
       </div>

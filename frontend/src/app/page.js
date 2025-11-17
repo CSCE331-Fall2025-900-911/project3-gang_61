@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import styles from "./page.module.css";
 import { authenticateWithGoogle } from "@/lib/api";
+import AccessibilityMenu from "@/components/AccessibilityMenu";
+import styles from "./page.module.css";
 
 export default function Login() {
   const router = useRouter();
@@ -104,122 +105,129 @@ export default function Login() {
 
   return (
     <div className={styles.page}>
+      {/* Accessibility Menu in top-right corner */}
+      <div className={styles.accessibilityWrapper}>
+        <AccessibilityMenu />
+      </div>
+
       <div className={styles.container}>
-        <h1 className={styles.brand}>Sharetea</h1>
-        <p className={styles.subtitle}>
-          Sign in with your Google account to get started.
-        </p>
+        <div className={styles.loginCard}>
+          <h1 className={styles.brand}>Sharetea</h1>
+          <p className={styles.subtitle}>
+            Sign in with your Google account to get started.
+          </p>
 
-        {isLoading ? (
-          <div className={styles.loadingContainer}>
-            <div className={styles.spinner}></div>
-            <p>Authenticating...</p>
-          </div>
-        ) : (
-          <>
-            {/* TEMPORARY TESTING BUTTONS - REMOVE WHEN DONE */}
-            <div
-              style={{
-                marginBottom: "24px",
-                paddingBottom: "24px",
-                borderBottom: "1px solid #e5e5e5",
-              }}
-            >
-              <button
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  marginBottom: "8px",
-                  cursor: "pointer",
-                  borderRadius: "8px",
-                  border: "1px solid #ddd",
-                  background: "#f5f5f5",
-                  color: "#333",
-                  fontSize: "16px",
-                }}
-                onClick={() => {
-                  // Set test auth data for testing purposes
-                  sessionStorage.setItem("authToken", "test-token");
-                  sessionStorage.setItem(
-                    "user",
-                    JSON.stringify({ role: "guest", email: "test@test.com" })
-                  );
-                  router.push("/kiosk");
-                }}
-              >
-                Kiosk
-              </button>
-              <button
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  marginBottom: "8px",
-                  cursor: "pointer",
-                  borderRadius: "8px",
-                  border: "1px solid #ddd",
-                  background: "#f5f5f5",
-                  color: "#333",
-                  fontSize: "16px",
-                }}
-                onClick={() => {
-                  // Set test auth data for testing purposes
-                  sessionStorage.setItem("authToken", "test-token");
-                  sessionStorage.setItem(
-                    "user",
-                    JSON.stringify({
-                      role: "cashier",
-                      email: "cashier@test.com",
-                    })
-                  );
-                  router.push("/cashier");
-                }}
-              >
-                Cashier
-              </button>
-              <button
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  marginBottom: "8px",
-                  cursor: "pointer",
-                  borderRadius: "8px",
-                  border: "1px solid #ddd",
-                  background: "#f5f5f5",
-                  color: "#333",
-                  fontSize: "16px",
-                }}
-                onClick={() => {
-                  // Set test auth data for testing purposes
-                  sessionStorage.setItem("authToken", "test-token");
-                  sessionStorage.setItem(
-                    "user",
-                    JSON.stringify({
-                      role: "manager",
-                      email: "manager@test.com",
-                    })
-                  );
-                  router.push("/manager");
-                }}
-              >
-                Manager
-              </button>
+          {isLoading ? (
+            <div className={styles.loadingContainer}>
+              <div className={styles.spinner}></div>
+              <p>Authenticating...</p>
             </div>
-            {/* END TEMPORARY TESTING BUTTONS */}
-
-            {googleClientId ? (
+          ) : (
+            <>
+              {/* TEMPORARY TESTING BUTTONS - REMOVE WHEN DONE */}
               <div
-                ref={googleSignInButtonRef}
-                className={styles.googleSignInContainer}
-              ></div>
-            ) : (
-              <div className={styles.errorContainer}>
-                <p className={styles.errorText}>
-                  Google Sign-In is not configured. Please contact support.
-                </p>
+                style={{
+                  marginBottom: "24px",
+                  paddingBottom: "24px",
+                  borderBottom: "1px solid #e5e5e5",
+                }}
+              >
+                <button
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    marginBottom: "8px",
+                    cursor: "pointer",
+                    borderRadius: "8px",
+                    border: "1px solid #ddd",
+                    background: "#f5f5f5",
+                    color: "#333",
+                    fontSize: "16px",
+                  }}
+                  onClick={() => {
+                    // Set test auth data for testing purposes
+                    sessionStorage.setItem("authToken", "test-token");
+                    sessionStorage.setItem(
+                      "user",
+                      JSON.stringify({ role: "guest", email: "test@test.com" })
+                    );
+                    router.push("/kiosk");
+                  }}
+                >
+                  Kiosk
+                </button>
+                <button
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    marginBottom: "8px",
+                    cursor: "pointer",
+                    borderRadius: "8px",
+                    border: "1px solid #ddd",
+                    background: "#f5f5f5",
+                    color: "#333",
+                    fontSize: "16px",
+                  }}
+                  onClick={() => {
+                    // Set test auth data for testing purposes
+                    sessionStorage.setItem("authToken", "test-token");
+                    sessionStorage.setItem(
+                      "user",
+                      JSON.stringify({
+                        role: "cashier",
+                        email: "cashier@test.com",
+                      })
+                    );
+                    router.push("/cashier");
+                  }}
+                >
+                  Cashier
+                </button>
+                <button
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    marginBottom: "8px",
+                    cursor: "pointer",
+                    borderRadius: "8px",
+                    border: "1px solid #ddd",
+                    background: "#f5f5f5",
+                    color: "#333",
+                    fontSize: "16px",
+                  }}
+                  onClick={() => {
+                    // Set test auth data for testing purposes
+                    sessionStorage.setItem("authToken", "test-token");
+                    sessionStorage.setItem(
+                      "user",
+                      JSON.stringify({
+                        role: "manager",
+                        email: "manager@test.com",
+                      })
+                    );
+                    router.push("/manager");
+                  }}
+                >
+                  Manager
+                </button>
               </div>
-            )}
-          </>
-        )}
+              {/* END TEMPORARY TESTING BUTTONS */}
+
+              {googleClientId ? (
+                <div
+                  ref={googleSignInButtonRef}
+                  className={styles.googleSignInContainer}
+                ></div>
+              ) : (
+                <div className={styles.errorContainer}>
+                  <p className={styles.errorText}>
+                    Google Sign-In is not configured. Please contact support.
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

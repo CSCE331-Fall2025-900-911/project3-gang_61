@@ -120,12 +120,11 @@ export async function submitOrder(orderData) {
 }
 
 /**
- * Fetch all users from the backend database
- * @returns {Promise<Array>} Array of user objects from database
- * @throws {Error} If the request fails
+ * Fetch all users
+ * @returns {Promise<Array>} List of users
  */
 export async function fetchUsers() {
-  const response = await fetch(buildApiUrl('/users'), {
+  const response = await fetch(`${API_BASE_URL}/users`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -133,27 +132,20 @@ export async function fetchUsers() {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `Failed to fetch users: ${response.status} ${response.statusText} - ${errorText}`
-    );
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to fetch users");
   }
 
-  const data = await response.json();
-  return Array.isArray(data) ? data : [];
+  return response.json();
 }
 
 /**
  * Create a new user
- * @param {Object} userData - User data to create
- * @param {string} userData.user_name - User name (optional)
- * @param {string} userData.email - User email (required)
- * @param {string} userData.role - User role: manager, cashier, or guest (required)
- * @returns {Promise<Object>} Created user object
- * @throws {Error} If the request fails
+ * @param {Object} userData - User data
+ * @returns {Promise<Object>} Created user
  */
 export async function createUser(userData) {
-  const response = await fetch(buildApiUrl('/users'), {
+  const response = await fetch(`${API_BASE_URL}/users`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -162,35 +154,21 @@ export async function createUser(userData) {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    let errorMessage = `Failed to create user: ${response.status} ${response.statusText}`;
-
-    try {
-      const errorData = JSON.parse(errorText);
-      errorMessage = errorData.message || errorData.error || errorMessage;
-    } catch (e) {
-      errorMessage = `${errorMessage} - ${errorText}`;
-    }
-
-    throw new Error(errorMessage);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to create user");
   }
 
-  const data = await response.json();
-  return data.user;
+  return response.json();
 }
 
 /**
- * Update an existing user
- * @param {number} userId - User ID to update
- * @param {Object} userData - User data to update
- * @param {string} [userData.user_name] - User name (optional)
- * @param {string} [userData.email] - User email (optional)
- * @param {string} [userData.role] - User role: manager, cashier, or guest (optional)
- * @returns {Promise<Object>} Updated user object
- * @throws {Error} If the request fails
+ * Update a user
+ * @param {number} userId - User ID
+ * @param {Object} userData - Updated user data
+ * @returns {Promise<Object>} Updated user
  */
 export async function updateUser(userId, userData) {
-  const response = await fetch(buildApiUrl(`/users/${userId}`), {
+  const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -199,31 +177,20 @@ export async function updateUser(userId, userData) {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    let errorMessage = `Failed to update user: ${response.status} ${response.statusText}`;
-
-    try {
-      const errorData = JSON.parse(errorText);
-      errorMessage = errorData.message || errorData.error || errorMessage;
-    } catch (e) {
-      errorMessage = `${errorMessage} - ${errorText}`;
-    }
-
-    throw new Error(errorMessage);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to update user");
   }
 
-  const data = await response.json();
-  return data.user;
+  return response.json();
 }
 
 /**
  * Delete a user
- * @param {number} userId - User ID to delete
- * @returns {Promise<Object>} Success response
- * @throws {Error} If the request fails
+ * @param {number} userId - User ID
+ * @returns {Promise<Object>} Deletion response
  */
 export async function deleteUser(userId) {
-  const response = await fetch(buildApiUrl(`/users/${userId}`), {
+  const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -231,21 +198,11 @@ export async function deleteUser(userId) {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    let errorMessage = `Failed to delete user: ${response.status} ${response.statusText}`;
-
-    try {
-      const errorData = JSON.parse(errorText);
-      errorMessage = errorData.message || errorData.error || errorMessage;
-    } catch (e) {
-      errorMessage = `${errorMessage} - ${errorText}`;
-    }
-
-    throw new Error(errorMessage);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to delete user");
   }
 
-  const data = await response.json();
-  return data;
+  return response.json();
 }
 
 /**

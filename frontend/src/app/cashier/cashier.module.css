@@ -247,72 +247,113 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  padding: 16px 24px;
   background-color: #ffffff;
-  border-top: 2px solid #e5e5e5;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+  border-top: 1px solid #e5e5e5;
+  gap: 16px;
 }
 
-.logoutButton {
-  padding: 12px 24px;
-  background-color: #666;
-  color: #ffffff;
-  border: none;
+.leftActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoutIconButton {
+  width: 60px;
+  height: 60px;
   border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
+  background-color: transparent;
+  color: #666;
+  border: none;
   cursor: pointer;
-  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, transform 0.2s, filter 0.2s;
+  padding: 0;
 }
 
-.logoutButton:hover {
-  background-color: #555;
+.logoutIconButton:hover {
+  background-color: #fef2f2;
+}
+
+.logoutIconButton:hover img {
+  filter: brightness(0) saturate(100%) invert(21%) sepia(93%) saturate(4287%) hue-rotate(347deg) brightness(89%) contrast(92%);
+}
+
+.logoutIconButton:active {
+  transform: scale(0.95);
 }
 
 .cartActions {
   display: flex;
+  align-items: center;
   gap: 12px;
 }
 
-.clearCartButton,
-.checkoutButton {
-  padding: 12px 24px;
-  border: none;
+.deleteIconButton {
+  width: 60px;
+  height: 60px;
   border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.clearCartButton {
-  background-color: #f5f5f5;
+  background-color: transparent;
   color: #666;
-  border: 1px solid #d1d1d1;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, transform 0.2s, filter 0.2s;
+  padding: 0;
 }
 
-.clearCartButton:hover:not(:disabled) {
-  background-color: #ebebeb;
-  border-color: #999;
+.deleteIconButton:hover:not(:disabled) {
+  background-color: #fef2f2;
 }
 
-.clearCartButton:disabled {
-  opacity: 0.5;
+.deleteIconButton:hover:not(:disabled) img {
+  filter: brightness(0) saturate(100%) invert(21%) sepia(93%) saturate(4287%) hue-rotate(347deg) brightness(89%) contrast(92%);
+}
+
+.deleteIconButton:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.deleteIconButton:disabled {
+  opacity: 0.3;
   cursor: not-allowed;
 }
 
 .checkoutButton {
+  padding: 16px 32px;
   background-color: #dc2626;
   color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  white-space: nowrap;
 }
 
 .checkoutButton:hover:not(:disabled) {
   background-color: #b91c1c;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+}
+
+.checkoutButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
 }
 
 .checkoutButton:disabled {
-  opacity: 0.5;
+  background-color: #d1d5db;
   cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.6;
 }
 
 /* Modification Modal */
