@@ -1,4 +1,9 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+// Debug logging (remove in production if needed)
+if (typeof window !== 'undefined') {
+  console.log('API_BASE_URL:', API_BASE_URL);
+}
 
 /**
  * Fetch all products from the backend database
@@ -6,7 +11,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
  * @throws {Error} If the request fails
  */
 export async function fetchProducts() {
-  const response = await fetch(`${API_BASE_URL}/products`, {
+  const response = await fetch(`${API_BASE_URL}/api/products`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -31,7 +36,7 @@ export async function fetchProducts() {
  * @throws {Error} If the request fails
  */
 export async function fetchAddOns() {
-  const response = await fetch(`${API_BASE_URL}/products?category=Add-on`, {
+  const response = await fetch(`${API_BASE_URL}/api/products?category=Add-on`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -79,7 +84,7 @@ export async function submitOrder(orderData) {
       orderData.employee_id !== undefined ? parseInt(orderData.employee_id) : 0,
   };
 
-  const response = await fetch(`${API_BASE_URL}/orders`, {
+  const response = await fetch(`${API_BASE_URL}/api/orders`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -112,7 +117,7 @@ export async function submitOrder(orderData) {
  * @throws {Error} If the request fails
  */
 export async function authenticateWithGoogle(credential) {
-  const response = await fetch(`${API_BASE_URL}/auth/google`, {
+  const response = await fetch(`${API_BASE_URL}/api/auth/google`, {
     //go to auth.js and see post route for google
     method: "POST",
     headers: {
