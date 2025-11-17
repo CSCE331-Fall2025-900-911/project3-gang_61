@@ -1,4 +1,13 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// Normalize API_BASE_URL - remove trailing slashes to prevent double slashes in URLs
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = rawApiUrl.replace(/\/+$/, '');
+
+// Helper function to build API URLs safely
+const buildApiUrl = (path) => {
+  // Remove leading slash from path if present, then add it back
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE_URL}${cleanPath}`;
+};
 
 // Debug logging (remove in production if needed)
 if (typeof window !== 'undefined') {
@@ -11,7 +20,7 @@ if (typeof window !== 'undefined') {
  * @throws {Error} If the request fails
  */
 export async function fetchProducts() {
-  const response = await fetch(`${API_BASE_URL}/api/products`, {
+  const response = await fetch(buildApiUrl('/api/products'), {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -36,7 +45,7 @@ export async function fetchProducts() {
  * @throws {Error} If the request fails
  */
 export async function fetchAddOns() {
-  const response = await fetch(`${API_BASE_URL}/api/products?category=Add-on`, {
+  const response = await fetch(buildApiUrl('/api/products?category=Add-on'), {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -84,7 +93,7 @@ export async function submitOrder(orderData) {
       orderData.employee_id !== undefined ? parseInt(orderData.employee_id) : 0,
   };
 
-  const response = await fetch(`${API_BASE_URL}/api/orders`, {
+  const response = await fetch(buildApiUrl('/api/orders'), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -116,7 +125,7 @@ export async function submitOrder(orderData) {
  * @throws {Error} If the request fails
  */
 export async function fetchUsers() {
-  const response = await fetch(`${API_BASE_URL}/users`, {
+  const response = await fetch(buildApiUrl('/api/users'), {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -144,7 +153,7 @@ export async function fetchUsers() {
  * @throws {Error} If the request fails
  */
 export async function createUser(userData) {
-  const response = await fetch(`${API_BASE_URL}/users`, {
+  const response = await fetch(buildApiUrl('/api/users'), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -181,7 +190,7 @@ export async function createUser(userData) {
  * @throws {Error} If the request fails
  */
 export async function updateUser(userId, userData) {
-  const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+  const response = await fetch(buildApiUrl(`/api/users/${userId}`), {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -214,7 +223,7 @@ export async function updateUser(userId, userData) {
  * @throws {Error} If the request fails
  */
 export async function deleteUser(userId) {
-  const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+  const response = await fetch(buildApiUrl(`/api/users/${userId}`), {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -246,7 +255,7 @@ export async function deleteUser(userId) {
  * @throws {Error} If the request fails
  */
 export async function authenticateWithGoogle(credential) {
-  const response = await fetch(`${API_BASE_URL}/api/auth/google`, {
+  const response = await fetch(buildApiUrl('/api/auth/google'), {
     //go to auth.js and see post route for google
     method: "POST",
     headers: {
