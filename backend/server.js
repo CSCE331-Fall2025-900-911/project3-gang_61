@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import productsRouter from "./routes/products.js";
 import ordersRouter from "./routes/orders.js";
 import authRouter from "./routes/auth.js";
+import usersRouter from "./routes/users.js";
 import { testConnection } from "./config/database.js";
 
 dotenv.config();
@@ -50,6 +51,7 @@ app.get("/health", (req, res) => {
 app.use("/api/products", productsRouter);
 app.use("/api/orders", ordersRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/users", usersRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
