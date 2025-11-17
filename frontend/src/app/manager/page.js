@@ -422,6 +422,7 @@ function UserTableModal({ users, loading, onClose, onRefresh }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -438,6 +439,20 @@ function UserTableModal({ users, loading, onClose, onRefresh }) {
       return dateString;
     }
   };
+
+  // Filter users based on search query (name, email, or ID)
+  const filteredUsers = users.filter((user) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase().trim();
+    const userId = String(user.user_id || "").toLowerCase();
+    const userName = (user.user_name || "").toLowerCase();
+    const userEmail = (user.email || "").toLowerCase();
+    return (
+      userId.includes(query) ||
+      userName.includes(query) ||
+      userEmail.includes(query)
+    );
+  });
 
   const handleEdit = (user) => {
     setSelectedUser(user);
@@ -473,8 +488,15 @@ function UserTableModal({ users, loading, onClose, onRefresh }) {
         </div>
 
         <div className={styles.modalBody} style={{ padding: "20px" }}>
-          {/* Add User Button */}
-          <div style={{ marginBottom: "16px" }}>
+          {/* Add User Button and Search Bar */}
+          <div
+            style={{
+              display: "flex",
+              gap: "12px",
+              marginBottom: "16px",
+              alignItems: "center",
+            }}
+          >
             <button
               onClick={() => setShowAddModal(true)}
               style={{
@@ -487,12 +509,30 @@ function UserTableModal({ users, loading, onClose, onRefresh }) {
                 fontWeight: 500,
                 cursor: "pointer",
                 transition: "background-color 0.2s",
+                whiteSpace: "nowrap",
               }}
               onMouseOver={(e) => (e.target.style.backgroundColor = "#059669")}
               onMouseOut={(e) => (e.target.style.backgroundColor = "#10b981")}
             >
               + Add User
             </button>
+            <input
+              type="text"
+              placeholder="Search by name, email, or ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                flex: 1,
+                padding: "10px 16px",
+                border: "1px solid #d1d1d1",
+                borderRadius: "8px",
+                fontSize: "14px",
+                outline: "none",
+                transition: "border-color 0.2s",
+              }}
+              onFocus={(e) => (e.target.style.borderColor = "#3b82f6")}
+              onBlur={(e) => (e.target.style.borderColor = "#d1d1d1")}
+            />
           </div>
 
           {loading ? (
@@ -502,6 +542,10 @@ function UserTableModal({ users, loading, onClose, onRefresh }) {
           ) : users.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px" }}>
               No users found
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px" }}>
+              No users match your search
             </div>
           ) : (
             <div
@@ -583,7 +627,7 @@ function UserTableModal({ users, loading, onClose, onRefresh }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((user, index) => (
+                  {filteredUsers.map((user, index) => (
                     <tr
                       key={user.user_id}
                       style={{
