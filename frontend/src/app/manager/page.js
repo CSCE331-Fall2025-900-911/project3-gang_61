@@ -42,6 +42,7 @@ export default function CashierPage() {
   const [loadingUsers, setLoadingUsers] = useState(false);
 
   // Verify that the user logged in through sign-in services
+  // TODO verify user is a manager
   useRequireAuth(router);
 
   // Categorize products using database categories
