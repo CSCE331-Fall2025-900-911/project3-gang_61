@@ -508,6 +508,13 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
         </div>
 
         <div className={styles.modalBody}>
+          {/* Product Description */}
+          {product.description && (
+            <div className={styles.productDescription}>
+              {product.description}
+            </div>
+          )}
+          
           {/* Ice Level Selection */}
           <div className={styles.modificationSection}>
             <h3 className={styles.modificationTitle}>Ice Level</h3>
@@ -553,18 +560,29 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
                   (a) => a.product_id === addOn.product_id
                 );
                 return (
-                  <button
-                    key={addOn.product_id}
-                    onClick={() => toggleAddOn(addOn)}
-                    className={`${styles.addOnButton} ${
-                      isSelected ? styles.addOnButtonActive : ""
-                    }`}
-                  >
-                    <div className={styles.addOnName}>{addOn.product_name}</div>
-                    <div className={styles.addOnPrice}>
-                      +${parseFloat(addOn.price).toFixed(2)}
-                    </div>
-                  </button>
+                  <div key={addOn.product_id} className={styles.addOnWrapper}>
+                    <button
+                      onClick={() => toggleAddOn(addOn)}
+                      className={`${styles.addOnButton} ${
+                        isSelected ? styles.addOnButtonActive : ""
+                      }`}
+                    >
+                      <div className={styles.addOnName}>{addOn.product_name}</div>
+                      <div className={styles.addOnPrice}>
+                        +${parseFloat(addOn.price).toFixed(2)}
+                      </div>
+                    </button>
+                    {addOn.description && (
+                      <>
+                        <div className={styles.addOnInfoContainer}>
+                          <span className={styles.addOnInfoIcon}>i</span>
+                        </div>
+                        <div className={styles.addOnTooltip}>
+                          {addOn.description}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 );
               })}
             </div>
