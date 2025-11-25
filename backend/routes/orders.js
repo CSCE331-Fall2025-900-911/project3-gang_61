@@ -165,30 +165,70 @@ router.post("/", async (req, res, next) => {
 /**
  * GET /api/orders
  * Fetch all orders (optional: for admin/management)
+ * Query params: 
+ *   - limit: number of recent orders to fetch (default: all)
+ *   - includeItems: whether to include items array (default: true, set to false for faster queries)
  */
 router.get("/", async (req, res, next) => {
   try {
-    const result = await query(
-      `SELECT o.*, 
-              COALESCE(
-                json_agg(
-                  json_build_object(
-                    'item_id', i.item_id,
-                    'product_id', i.product_id,
-                    'price', i.price,
-                    'sugar_level', i.sugar_level,
-                    'ice_level', i.ice_level,
-                    'group_id', i.group_id
-                  ) ORDER BY i.group_id, i.item_id
-                ) FILTER (WHERE i.item_id IS NOT NULL),
-                '[]'::json
-              ) as items
-       FROM orders o
-       LEFT JOIN items i ON o.order_id = i.order_id
-       GROUP BY o.order_id, o.member_id, o.employee_id, o.order_time, o.order_status
-       ORDER BY o.order_time DESC NULLS LAST`
-    );
+    const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
+    const includeItems = req.query.includeItems !== 'false';
+    
+    // Validate limit is a positive integer (max 1000 for safety)
+    const validLimit = limit && limit > 0 && limit <= 1000 ? limit : null;
+    
+    let queryString;
+    
+    if (includeItems) {
+      // Full query with items (slower but complete)
+      queryString = `SELECT o.*, 
+                COALESCE(
+                  json_agg(
+                    json_build_object(
+                      'item_id', i.item_id,
+                      'product_id', i.product_id,
+                      'price', i.price,
+                      'sugar_level', i.sugar_level,
+                      'ice_level', i.ice_level,
+                      'group_id', i.group_id
+                    ) ORDER BY i.group_id, i.item_id
+                  ) FILTER (WHERE i.item_id IS NOT NULL),
+                  '[]'::json
+                ) as items
+         FROM orders o
+         LEFT JOIN items i ON o.order_id = i.order_id
+         GROUP BY o.order_id, o.member_id, o.employee_id, o.order_time, o.order_status
+         ORDER BY o.order_time DESC NULLS LAST`;
+    } else {
+      // Fast query without items - use CTE to optimize
+      if (validLimit) {
+        // For limited queries, use CTE to get orders first, then calculate totals
+        queryString = `WITH recent_orders AS (
+           SELECT * FROM orders 
+           ORDER BY order_time DESC NULLS LAST 
+           LIMIT ${validLimit}
+         )
+         SELECT o.*,
+                (SELECT COALESCE(SUM(price), 0) FROM items WHERE order_id = o.order_id) as total,
+                '[]'::json as items
+         FROM recent_orders o
+         ORDER BY o.order_time DESC NULLS LAST`;
+      } else {
+        // For all orders, use regular query
+        queryString = `SELECT o.*,
+                (SELECT COALESCE(SUM(price), 0) FROM items WHERE order_id = o.order_id) as total,
+                '[]'::json as items
+         FROM orders o
+         ORDER BY o.order_time DESC NULLS LAST`;
+      }
+    }
+    
+    // Add LIMIT clause only if not already in CTE
+    if (validLimit && includeItems) {
+      queryString += ` LIMIT ${validLimit}`;
+    }
 
+    const result = await query(queryString);
     res.json(result.rows);
   } catch (error) {
     next(error);

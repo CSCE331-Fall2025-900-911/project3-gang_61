@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { 
@@ -10,7 +10,8 @@ import {
   fetchUsers,
   createUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  fetchOrders
 } from "@/lib/api";
 import { logout } from "@/lib/auth";
 import { useRequireAuth } from "@/lib/useAuth";
@@ -42,6 +43,9 @@ export default function CashierPage() {
   const [showUserTable, setShowUserTable] = useState(false);
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [transactions, setTransactions] = useState([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [transactionsError, setTransactionsError] = useState(null);
 
   // Verify that the user logged in through sign-in services
   // TODO verify user is a manager
@@ -87,6 +91,34 @@ export default function CashierPage() {
     }
     loadData();
   }, []);
+
+  // Function to load recent transactions (can be called from multiple places)
+  const loadTransactions = useCallback(async (showLoading = true) => {
+    try {
+      if (showLoading) {
+        setLoadingTransactions(true);
+      }
+      setTransactionsError(null);
+      
+      // Fetch only the 20 most recent orders directly from the API
+      const ordersData = await fetchOrders(20);
+      setTransactions(ordersData);
+    } catch (err) {
+      console.error("Failed to load transactions:", err);
+      setTransactionsError(err.message || "Failed to load transactions");
+      setTransactions([]);
+    } finally {
+      if (showLoading) {
+        setLoadingTransactions(false);
+      }
+    }
+  }, []);
+
+  // Load recent transactions on page load
+  // Show cached data immediately if available, then refresh in background
+  useEffect(() => {
+    loadTransactions(true, true);
+  }, [loadTransactions]);
 
   const categorizedProducts = categorizeProducts();
   const availableCategories = Object.keys(categorizedProducts).filter(
@@ -190,6 +222,9 @@ export default function CashierPage() {
 
       alert(successMessage);
       clearCart();
+      
+      // Refresh transactions after successful order
+      loadTransactions();
     } catch (error) {
       const errorMessage =
         error.message || "Failed to place order. Please try again.";
@@ -239,9 +274,71 @@ export default function CashierPage() {
     );
   }
 
+  // Calculate total for each transaction
+  const calculateTransactionTotal = (transaction) => {
+    // If total is already calculated on backend, use it
+    if (transaction.total !== undefined) {
+      return parseFloat(transaction.total) || 0;
+    }
+    // Fallback to calculating from items if available
+    if (transaction.items && Array.isArray(transaction.items)) {
+      return transaction.items.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
+    }
+    return 0;
+  };
+
+  // Format date for display
+  const formatTransactionDate = (dateString) => {
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (e) {
+      return dateString;
+    }
+  };
+
   return (
     <div className={styles.managerContainer}>
-      <div className={styles.cashierLayout}>
+      <div className={styles.managerLayout}>
+        {/* Recent Transactions Sidebar */}
+        <div className={styles.transactionsSidebar}>
+          <h2 className={styles.sidebarTitle}>Recent Transactions</h2>
+          <div className={styles.transactionsList}>
+            {loadingTransactions ? (
+              <div className={styles.loadingTransactions}>Loading...</div>
+            ) : transactionsError ? (
+              <div className={styles.transactionsError}>{transactionsError}</div>
+            ) : transactions.length === 0 ? (
+              <div className={styles.emptyTransactions}>No transactions yet</div>
+            ) : (
+              transactions.map((transaction) => (
+                <div key={transaction.order_id} className={styles.transactionItem}>
+                  <div className={styles.transactionHeader}>
+                    <div className={styles.transactionId}>Order #{transaction.order_id}</div>
+                    <div className={styles.transactionDate}>
+                      {formatTransactionDate(transaction.order_time)}
+                    </div>
+                  </div>
+                  <div className={styles.transactionDetails}>
+                    <div className={styles.transactionStatus}>
+                      Status: <span className={styles.statusBadge}>{transaction.order_status || "complete"}</span>
+                    </div>
+                    <div className={styles.transactionTotal}>
+                      ${calculateTransactionTotal(transaction).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
         {/* Products Section - All Products (Scrollable) */}
         <div className={styles.productsSection}>
           <div className={styles.productsScrollContainer}>
@@ -569,10 +666,17 @@ function UserTableModal({ users, loading, onClose, onRefresh }) {
                 borderRadius: "8px",
                 fontSize: "14px",
                 outline: "none",
-                transition: "border-color 0.2s",
+                transition: "border-color 0.2s, background-color 0.2s",
+                backgroundColor: "#f5f5f5",
               }}
-              onFocus={(e) => (e.target.style.borderColor = "#3b82f6")}
-              onBlur={(e) => (e.target.style.borderColor = "#d1d1d1")}
+              onFocus={(e) => {
+                e.target.style.borderColor = "#3b82f6";
+                e.target.style.backgroundColor = "#ffffff";
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = "#d1d1d1";
+                e.target.style.backgroundColor = "#f5f5f5";
+              }}
             />
           </div>
 
@@ -677,11 +781,11 @@ function UserTableModal({ users, loading, onClose, onRefresh }) {
                           index % 2 === 0 ? "#ffffff" : "#fafafa",
                       }}
                     >
-                      <td style={{ padding: "12px" }}>{user.user_id}</td>
-                      <td style={{ padding: "12px" }}>
+                      <td style={{ padding: "12px", color: "#1a1a1a" }}>{user.user_id}</td>
+                      <td style={{ padding: "12px", color: "#1a1a1a" }}>
                         {user.user_name || "N/A"}
                       </td>
-                      <td style={{ padding: "12px" }}>{user.email}</td>
+                      <td style={{ padding: "12px", color: "#1a1a1a" }}>{user.email}</td>
                       <td style={{ padding: "12px" }}>
                         <span
                           style={{
@@ -710,7 +814,7 @@ function UserTableModal({ users, loading, onClose, onRefresh }) {
                           {user.role || "guest"}
                         </span>
                       </td>
-                      <td style={{ padding: "12px" }}>
+                      <td style={{ padding: "12px", color: "#1a1a1a" }}>
                         {formatDate(user.created_at)}
                       </td>
                       <td style={{ padding: "12px" }}>
@@ -906,6 +1010,8 @@ function UserFormModal({ mode, user = null, onClose, onSuccess }) {
                   border: "1px solid #d1d1d1",
                   borderRadius: "6px",
                   fontSize: "14px",
+                  backgroundColor: "#f5f5f5",
+                  color: "#1a1a1a",
                 }}
               />
             </div>
@@ -934,6 +1040,8 @@ function UserFormModal({ mode, user = null, onClose, onSuccess }) {
                   border: "1px solid #d1d1d1",
                   borderRadius: "6px",
                   fontSize: "14px",
+                  backgroundColor: "#f5f5f5",
+                  color: "#1a1a1a",
                 }}
               />
             </div>
@@ -961,7 +1069,8 @@ function UserFormModal({ mode, user = null, onClose, onSuccess }) {
                   border: "1px solid #d1d1d1",
                   borderRadius: "6px",
                   fontSize: "14px",
-                  backgroundColor: "#ffffff",
+                  backgroundColor: "#f5f5f5",
+                  color: "#1a1a1a",
                 }}
               >
                 <option value="member">Member</option>
