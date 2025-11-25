@@ -569,10 +569,17 @@ function UserTableModal({ users, loading, onClose, onRefresh }) {
                 borderRadius: "8px",
                 fontSize: "14px",
                 outline: "none",
-                transition: "border-color 0.2s",
+                transition: "border-color 0.2s, background-color 0.2s",
+                backgroundColor: "#f5f5f5",
               }}
-              onFocus={(e) => (e.target.style.borderColor = "#3b82f6")}
-              onBlur={(e) => (e.target.style.borderColor = "#d1d1d1")}
+              onFocus={(e) => {
+                e.target.style.borderColor = "#3b82f6";
+                e.target.style.backgroundColor = "#ffffff";
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = "#d1d1d1";
+                e.target.style.backgroundColor = "#f5f5f5";
+              }}
             />
           </div>
 
@@ -677,11 +684,11 @@ function UserTableModal({ users, loading, onClose, onRefresh }) {
                           index % 2 === 0 ? "#ffffff" : "#fafafa",
                       }}
                     >
-                      <td style={{ padding: "12px" }}>{user.user_id}</td>
-                      <td style={{ padding: "12px" }}>
+                      <td style={{ padding: "12px", color: "#1a1a1a" }}>{user.user_id}</td>
+                      <td style={{ padding: "12px", color: "#1a1a1a" }}>
                         {user.user_name || "N/A"}
                       </td>
-                      <td style={{ padding: "12px" }}>{user.email}</td>
+                      <td style={{ padding: "12px", color: "#1a1a1a" }}>{user.email}</td>
                       <td style={{ padding: "12px" }}>
                         <span
                           style={{
@@ -710,7 +717,7 @@ function UserTableModal({ users, loading, onClose, onRefresh }) {
                           {user.role || "guest"}
                         </span>
                       </td>
-                      <td style={{ padding: "12px" }}>
+                      <td style={{ padding: "12px", color: "#1a1a1a" }}>
                         {formatDate(user.created_at)}
                       </td>
                       <td style={{ padding: "12px" }}>
@@ -906,6 +913,8 @@ function UserFormModal({ mode, user = null, onClose, onSuccess }) {
                   border: "1px solid #d1d1d1",
                   borderRadius: "6px",
                   fontSize: "14px",
+                  backgroundColor: "#f5f5f5",
+                  color: "#1a1a1a",
                 }}
               />
             </div>
@@ -934,6 +943,8 @@ function UserFormModal({ mode, user = null, onClose, onSuccess }) {
                   border: "1px solid #d1d1d1",
                   borderRadius: "6px",
                   fontSize: "14px",
+                  backgroundColor: "#f5f5f5",
+                  color: "#1a1a1a",
                 }}
               />
             </div>
@@ -961,7 +972,8 @@ function UserFormModal({ mode, user = null, onClose, onSuccess }) {
                   border: "1px solid #d1d1d1",
                   borderRadius: "6px",
                   fontSize: "14px",
-                  backgroundColor: "#ffffff",
+                  backgroundColor: "#f5f5f5",
+                  color: "#1a1a1a",
                 }}
               >
                 <option value="member">Member</option>
