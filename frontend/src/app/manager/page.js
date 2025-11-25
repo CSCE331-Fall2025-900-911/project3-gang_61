@@ -276,6 +276,11 @@ export default function CashierPage() {
 
   // Calculate total for each transaction
   const calculateTransactionTotal = (transaction) => {
+    // If total is already calculated on backend, use it
+    if (transaction.total !== undefined) {
+      return parseFloat(transaction.total) || 0;
+    }
+    // Fallback to calculating from items if available
     if (transaction.items && Array.isArray(transaction.items)) {
       return transaction.items.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
     }

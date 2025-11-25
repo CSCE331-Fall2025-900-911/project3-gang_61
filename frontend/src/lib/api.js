@@ -207,10 +207,11 @@ export async function deleteUser(userId) {
 /**
  * Fetch orders/transactions
  * @param {number} limit - Optional limit for number of recent orders to fetch
+ * @param {boolean} includeItems - Whether to include items array (default: false for faster queries)
  * @returns {Promise<Array>} Array of order objects
  * @throws {Error} If the request fails
  */
-export async function fetchOrders(limit = null) {
+export async function fetchOrders(limit = null, includeItems = false) {
   const authToken = typeof window !== 'undefined' ? sessionStorage.getItem("authToken") : null;
   
   const headers = {
@@ -221,10 +222,17 @@ export async function fetchOrders(limit = null) {
     headers["Authorization"] = `Bearer ${authToken}`;
   }
 
-  // Build URL with limit parameter if provided
+  // Build URL with query parameters
   let url = buildApiUrl('/orders');
+  const params = new URLSearchParams();
   if (limit && limit > 0) {
-    url += `?limit=${limit}`;
+    params.append('limit', limit.toString());
+  }
+  if (!includeItems) {
+    params.append('includeItems', 'false');
+  }
+  if (params.toString()) {
+    url += `?${params.toString()}`;
   }
 
   const response = await fetch(url, {
