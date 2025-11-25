@@ -40,7 +40,7 @@ const languages = [
 
 export default function AccessibilityMenu() {
   const [isOpen, setIsOpen] = useState(false);
-  const [textToSpeech, setTextToSpeech] = useState(false);
+  const [highContrast, setHighContrast] = useState(false);
   const [languageTranslation, setLanguageTranslation] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("en");
   const [largeText, setLargeText] = useState(false);
@@ -146,11 +146,11 @@ export default function AccessibilityMenu() {
           <label className={styles.checkboxLabel}>
             <input
               type="checkbox"
-              checked={textToSpeech}
-              onChange={(e) => setTextToSpeech(e.target.checked)}
+              checked={highContrast}
+              onChange={(e) => setHighContrast(e.target.checked)}
               className={styles.checkbox}
             />
-            <span>Text-to-Speech</span>
+            <span>High Contrast</span>
           </label>
 
           <div className={styles.languageSection}>
@@ -179,12 +179,6 @@ export default function AccessibilityMenu() {
                     ))}
                   </select>
                 </div>
-                <button
-                  onClick={applyTranslation}
-                  className={styles.saveButton}
-                >
-                  Save
-                </button>
               </>
             )}
           </div>
@@ -198,6 +192,18 @@ export default function AccessibilityMenu() {
             />
             <span>Large Text/Icons</span>
           </label>
+
+          <div className={styles.menuFooter}>
+            <button
+              onClick={applyTranslation}
+              className={styles.saveButton}
+              disabled={!languageTranslation}
+              aria-disabled={!languageTranslation}
+              title={languageTranslation ? "Apply translation" : "Enable Language Translation to save"}
+            >
+              Save
+            </button>
+          </div>
         </div>
       )}
     </div>

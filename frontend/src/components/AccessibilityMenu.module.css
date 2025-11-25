@@ -127,7 +127,7 @@
 }
 
 .saveButton {
-  margin-left: 28px;
+  margin-left: 4px; /* align with checkbox left face (label has padding-left:4px) */
   margin-top: 8px;
   padding: 8px 16px;
   background-color: #3b82f6;
@@ -139,7 +139,7 @@
   font-family: inherit;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.1s;
-  width: calc(100% - 28px);
+  width: calc(100% - 4px);
 }
 
 .saveButton:hover:not(:disabled) {
@@ -155,4 +155,12 @@
   background-color: #9ca3af;
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.menuFooter {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding-left: 0; /* remove extra inset so button lines up with checkboxes */
+  width: 100%;
 }
