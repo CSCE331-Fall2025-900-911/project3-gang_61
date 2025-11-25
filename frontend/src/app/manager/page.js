@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { 
@@ -10,7 +10,8 @@ import {
   fetchUsers,
   createUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  fetchOrders
 } from "@/lib/api";
 import { logout } from "@/lib/auth";
 import { useRequireAuth } from "@/lib/useAuth";
@@ -42,6 +43,9 @@ export default function CashierPage() {
   const [showUserTable, setShowUserTable] = useState(false);
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [transactions, setTransactions] = useState([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [transactionsError, setTransactionsError] = useState(null);
 
   // Verify that the user logged in through sign-in services
   // TODO verify user is a manager
@@ -87,6 +91,69 @@ export default function CashierPage() {
     }
     loadData();
   }, []);
+
+  // Function to load recent transactions (can be called from multiple places)
+  const loadTransactions = useCallback(async (showLoading = true, useCache = true) => {
+    try {
+      // Try to load from cache first if available
+      let cachedData = null;
+      if (useCache && typeof window !== 'undefined') {
+        const cachedTransactions = sessionStorage.getItem('manager_transactions');
+        const cacheTimestamp = sessionStorage.getItem('manager_transactions_timestamp');
+        
+        if (cachedTransactions && cacheTimestamp) {
+          const cacheAge = Date.now() - parseInt(cacheTimestamp);
+          // Use cache if it's less than 30 seconds old
+          if (cacheAge < 30000) {
+            try {
+              cachedData = JSON.parse(cachedTransactions);
+              setTransactions(cachedData);
+              // Still refresh in background, but don't show loading
+              showLoading = false;
+            } catch (e) {
+              // Cache parse error, continue with fresh fetch
+            }
+          }
+        }
+      }
+      
+      if (showLoading) {
+        setLoadingTransactions(true);
+      }
+      setTransactionsError(null);
+      
+      const ordersData = await fetchOrders();
+      // Get the 20 most recent transactions
+      const recentTransactions = ordersData.slice(0, 20);
+      setTransactions(recentTransactions);
+      
+      // Cache the transactions
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('manager_transactions', JSON.stringify(recentTransactions));
+        sessionStorage.setItem('manager_transactions_timestamp', Date.now().toString());
+      }
+    } catch (err) {
+      console.error("Failed to load transactions:", err);
+      setTransactionsError(err.message || "Failed to load transactions");
+      // Only clear transactions if we don't have cached data
+      const currentTransactions = typeof window !== 'undefined' 
+        ? sessionStorage.getItem('manager_transactions') 
+        : null;
+      if (!currentTransactions) {
+        setTransactions([]);
+      }
+    } finally {
+      if (showLoading) {
+        setLoadingTransactions(false);
+      }
+    }
+  }, []);
+
+  // Load recent transactions on page load
+  // Show cached data immediately if available, then refresh in background
+  useEffect(() => {
+    loadTransactions(true, true);
+  }, [loadTransactions]);
 
   const categorizedProducts = categorizeProducts();
   const availableCategories = Object.keys(categorizedProducts).filter(
@@ -190,6 +257,9 @@ export default function CashierPage() {
 
       alert(successMessage);
       clearCart();
+      
+      // Refresh transactions after successful order
+      loadTransactions();
     } catch (error) {
       const errorMessage =
         error.message || "Failed to place order. Please try again.";
@@ -239,9 +309,66 @@ export default function CashierPage() {
     );
   }
 
+  // Calculate total for each transaction
+  const calculateTransactionTotal = (transaction) => {
+    if (transaction.items && Array.isArray(transaction.items)) {
+      return transaction.items.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
+    }
+    return 0;
+  };
+
+  // Format date for display
+  const formatTransactionDate = (dateString) => {
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (e) {
+      return dateString;
+    }
+  };
+
   return (
     <div className={styles.managerContainer}>
-      <div className={styles.cashierLayout}>
+      <div className={styles.managerLayout}>
+        {/* Recent Transactions Sidebar */}
+        <div className={styles.transactionsSidebar}>
+          <h2 className={styles.sidebarTitle}>Recent Transactions</h2>
+          <div className={styles.transactionsList}>
+            {loadingTransactions ? (
+              <div className={styles.loadingTransactions}>Loading...</div>
+            ) : transactionsError ? (
+              <div className={styles.transactionsError}>{transactionsError}</div>
+            ) : transactions.length === 0 ? (
+              <div className={styles.emptyTransactions}>No transactions yet</div>
+            ) : (
+              transactions.map((transaction) => (
+                <div key={transaction.order_id} className={styles.transactionItem}>
+                  <div className={styles.transactionHeader}>
+                    <div className={styles.transactionId}>Order #{transaction.order_id}</div>
+                    <div className={styles.transactionDate}>
+                      {formatTransactionDate(transaction.order_time)}
+                    </div>
+                  </div>
+                  <div className={styles.transactionDetails}>
+                    <div className={styles.transactionStatus}>
+                      Status: <span className={styles.statusBadge}>{transaction.order_status || "complete"}</span>
+                    </div>
+                    <div className={styles.transactionTotal}>
+                      ${calculateTransactionTotal(transaction).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
         {/* Products Section - All Products (Scrollable) */}
         <div className={styles.productsSection}>
           <div className={styles.productsScrollContainer}>

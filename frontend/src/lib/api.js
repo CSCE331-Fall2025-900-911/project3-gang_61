@@ -205,6 +205,38 @@ export async function deleteUser(userId) {
 }
 
 /**
+ * Fetch all orders/transactions
+ * @returns {Promise<Array>} Array of order objects
+ * @throws {Error} If the request fails
+ */
+export async function fetchOrders() {
+  const authToken = typeof window !== 'undefined' ? sessionStorage.getItem("authToken") : null;
+  
+  const headers = {
+    "Content-Type": "application/json",
+  };
+  
+  if (authToken) {
+    headers["Authorization"] = `Bearer ${authToken}`;
+  }
+
+  const response = await fetch(buildApiUrl('/orders'), {
+    method: "GET",
+    headers: headers,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `Failed to fetch orders: ${response.status} ${response.statusText} - ${errorText}`
+    );
+  }
+
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+}
+
+/**
  * Authenticate with Google Sign-In
  * @param {string} credential - Google ID token credential
  * @returns {Promise<Object>} Response containing user info and token

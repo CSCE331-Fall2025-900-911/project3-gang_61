@@ -19,6 +19,122 @@
   overflow: hidden;
 }
 
+.managerLayout {
+  display: grid;
+  grid-template-columns: 300px 1fr 350px;
+  gap: 20px;
+  padding: 20px;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Recent Transactions Sidebar */
+.transactionsSidebar {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebarTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e5e5e5;
+}
+
+.transactionsList {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 16px;
+}
+
+.loadingTransactions,
+.emptyTransactions,
+.transactionsError {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+  font-size: 14px;
+}
+
+.transactionsError {
+  color: #dc2626;
+}
+
+.transactionItem {
+  background-color: #f9f9f9;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  transition: all 0.2s;
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.transactionItem:hover {
+  border-color: #dc2626;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.1);
+}
+
+.transactionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  min-height: 20px;
+}
+
+.transactionId {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  white-space: nowrap;
+}
+
+.transactionDate {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.transactionDetails {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 24px;
+}
+
+.transactionStatus {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+.statusBadge {
+  font-weight: 600;
+  color: #3CA63E;
+  text-transform: capitalize;
+  margin-left: 4px;
+}
+
+.transactionTotal {
+  font-size: 16px;
+  font-weight: 700;
+  color: #dc2626;
+  white-space: nowrap;
+}
+
 /* Products Section - Scrollable */
 .productsSection {
   background-color: #ffffff;
@@ -572,6 +688,10 @@
   .cashierLayout {
     grid-template-columns: 1fr 300px;
   }
+
+  .managerLayout {
+    grid-template-columns: 250px 1fr 300px;
+  }
 }
 
 @media (max-width: 968px) {
@@ -580,8 +700,23 @@
     grid-template-rows: 1fr auto;
   }
 
+  .managerLayout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .transactionsSidebar {
+    max-height: 200px;
+    order: 1;
+  }
+
+  .productsSection {
+    order: 2;
+  }
+
   .cartSidebar {
     max-height: 300px;
+    order: 3;
   }
 }
 
