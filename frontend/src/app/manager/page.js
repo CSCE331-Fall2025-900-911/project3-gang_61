@@ -93,55 +93,20 @@ export default function CashierPage() {
   }, []);
 
   // Function to load recent transactions (can be called from multiple places)
-  const loadTransactions = useCallback(async (showLoading = true, useCache = true) => {
+  const loadTransactions = useCallback(async (showLoading = true) => {
     try {
-      // Try to load from cache first if available
-      let cachedData = null;
-      if (useCache && typeof window !== 'undefined') {
-        const cachedTransactions = sessionStorage.getItem('manager_transactions');
-        const cacheTimestamp = sessionStorage.getItem('manager_transactions_timestamp');
-        
-        if (cachedTransactions && cacheTimestamp) {
-          const cacheAge = Date.now() - parseInt(cacheTimestamp);
-          // Use cache if it's less than 30 seconds old
-          if (cacheAge < 30000) {
-            try {
-              cachedData = JSON.parse(cachedTransactions);
-              setTransactions(cachedData);
-              // Still refresh in background, but don't show loading
-              showLoading = false;
-            } catch (e) {
-              // Cache parse error, continue with fresh fetch
-            }
-          }
-        }
-      }
-      
       if (showLoading) {
         setLoadingTransactions(true);
       }
       setTransactionsError(null);
       
-      const ordersData = await fetchOrders();
-      // Get the 20 most recent transactions
-      const recentTransactions = ordersData.slice(0, 20);
-      setTransactions(recentTransactions);
-      
-      // Cache the transactions
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('manager_transactions', JSON.stringify(recentTransactions));
-        sessionStorage.setItem('manager_transactions_timestamp', Date.now().toString());
-      }
+      // Fetch only the 20 most recent orders directly from the API
+      const ordersData = await fetchOrders(20);
+      setTransactions(ordersData);
     } catch (err) {
       console.error("Failed to load transactions:", err);
       setTransactionsError(err.message || "Failed to load transactions");
-      // Only clear transactions if we don't have cached data
-      const currentTransactions = typeof window !== 'undefined' 
-        ? sessionStorage.getItem('manager_transactions') 
-        : null;
-      if (!currentTransactions) {
-        setTransactions([]);
-      }
+      setTransactions([]);
     } finally {
       if (showLoading) {
         setLoadingTransactions(false);

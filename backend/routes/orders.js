@@ -165,11 +165,16 @@ router.post("/", async (req, res, next) => {
 /**
  * GET /api/orders
  * Fetch all orders (optional: for admin/management)
+ * Query params: limit - number of recent orders to fetch (default: all)
  */
 router.get("/", async (req, res, next) => {
   try {
-    const result = await query(
-      `SELECT o.*, 
+    const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
+    
+    // Validate limit is a positive integer (max 1000 for safety)
+    const validLimit = limit && limit > 0 && limit <= 1000 ? limit : null;
+    
+    let queryString = `SELECT o.*, 
               COALESCE(
                 json_agg(
                   json_build_object(
@@ -186,9 +191,14 @@ router.get("/", async (req, res, next) => {
        FROM orders o
        LEFT JOIN items i ON o.order_id = i.order_id
        GROUP BY o.order_id, o.member_id, o.employee_id, o.order_time, o.order_status
-       ORDER BY o.order_time DESC NULLS LAST`
-    );
+       ORDER BY o.order_time DESC NULLS LAST`;
+    
+    // Add LIMIT clause if valid (safe because we validated it's a number)
+    if (validLimit) {
+      queryString += ` LIMIT ${validLimit}`;
+    }
 
+    const result = await query(queryString);
     res.json(result.rows);
   } catch (error) {
     next(error);

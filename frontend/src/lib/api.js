@@ -205,11 +205,12 @@ export async function deleteUser(userId) {
 }
 
 /**
- * Fetch all orders/transactions
+ * Fetch orders/transactions
+ * @param {number} limit - Optional limit for number of recent orders to fetch
  * @returns {Promise<Array>} Array of order objects
  * @throws {Error} If the request fails
  */
-export async function fetchOrders() {
+export async function fetchOrders(limit = null) {
   const authToken = typeof window !== 'undefined' ? sessionStorage.getItem("authToken") : null;
   
   const headers = {
@@ -220,7 +221,13 @@ export async function fetchOrders() {
     headers["Authorization"] = `Bearer ${authToken}`;
   }
 
-  const response = await fetch(buildApiUrl('/orders'), {
+  // Build URL with limit parameter if provided
+  let url = buildApiUrl('/orders');
+  if (limit && limit > 0) {
+    url += `?limit=${limit}`;
+  }
+
+  const response = await fetch(url, {
     method: "GET",
     headers: headers,
   });
