@@ -89,3 +89,78 @@
 .checkboxLabel span {
   user-select: none;
 }
+
+.languageSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.languageDropdown {
+  margin-left: 28px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.languageSelect {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d1d1;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  background-color: white;
+  color: #333;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.languageSelect:hover {
+  border-color: #999999;
+  background-color: #f9f9f9;
+}
+
+.languageSelect:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.saveButton {
+  margin-left: 4px; /* align with checkbox left face (label has padding-left:4px) */
+  margin-top: 8px;
+  padding: 8px 16px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  width: calc(100% - 4px);
+}
+
+.saveButton:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.saveButton:active:not(:disabled) {
+  transform: scale(0.98);
+  background-color: #1d4ed8;
+}
+
+.saveButton:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.menuFooter {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding-left: 0; /* remove extra inset so button lines up with checkboxes */
+  width: 100%;
+}

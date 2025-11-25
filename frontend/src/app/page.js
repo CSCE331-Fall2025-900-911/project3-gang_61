@@ -105,7 +105,7 @@ export default function Login() {
 
   return (
     <div className={styles.page}>
-      {/* Accessibility Menu in top-right corner */}
+      {/* Accessibility Menu in bottom-left corner */}
       <div className={styles.accessibilityWrapper}>
         <AccessibilityMenu />
       </div>
