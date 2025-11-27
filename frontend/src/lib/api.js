@@ -284,3 +284,53 @@ export async function authenticateWithGoogle(credential) {
   const data = await response.json();
   return data;
 }
+
+// Create a new product
+export async function createProduct(productData) {
+  const response = await fetch(`${API_URL}/api/products`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(productData),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to create product");
+  }
+
+  return response.json();
+}
+
+// Update an existing product
+export async function updateProduct(productId, productData) {
+  const response = await fetch(`${API_URL}/api/products/${productId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(productData),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to update product");
+  }
+
+  return response.json();
+}
+
+// Delete a product
+export async function deleteProduct(productId) {
+  const response = await fetch(`${API_URL}/api/products/${productId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to delete product");
+  }
+
+  return response.json();
+}

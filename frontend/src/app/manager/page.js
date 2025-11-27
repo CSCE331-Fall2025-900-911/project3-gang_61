@@ -41,6 +41,7 @@ export default function CashierPage() {
   const [memberId, setMemberId] = useState(0);
   const [employeeId, setEmployeeId] = useState(0);
   const [showUserTable, setShowUserTable] = useState(false);
+  const [showInventoryTable, setShowInventoryTable] = useState(false);
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [transactions, setTransactions] = useState([]);
@@ -258,6 +259,26 @@ export default function CashierPage() {
     }
   };
 
+  // Handle inventory table button click
+  const handleInventoryTableClick = async () => {
+    setShowInventoryTable(true);
+    await refreshProducts();
+  };
+
+  // Refresh products list
+  const refreshProducts = async () => {
+    setLoading(true);
+    try {
+      const productsData = await fetchProducts();
+      setProducts(productsData);
+    } catch (err) {
+      console.error("Error fetching products:", err);
+      alert("Failed to load products. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className={styles.cashierContainer}>
@@ -334,8 +355,8 @@ export default function CashierPage() {
                     </div>
                   </div>
                 </div>
-              ))
-            )}
+              )))
+            }
           </div>
         </div>
 
@@ -486,7 +507,7 @@ export default function CashierPage() {
               Users Table
             </button>
             <button 
-              onClick={() => {/* TODO: Implement inventory table */}} 
+              onClick={handleInventoryTableClick} 
               className={styles.inventoryTableButton}
               title="Manage Inventory"
             >
@@ -549,6 +570,16 @@ export default function CashierPage() {
           loading={loadingUsers}
           onClose={() => setShowUserTable(false)}
           onRefresh={refreshUsers}
+        />
+      )}
+
+      {/* Inventory Table Modal */}
+      {showInventoryTable && (
+        <InventoryTableModal
+          products={products}
+          loading={loading}
+          onClose={() => setShowInventoryTable(false)}
+          onRefresh={refreshProducts}
         />
       )}
     </div>
@@ -915,15 +946,410 @@ function UserTableModal({ users, loading, onClose, onRefresh }) {
   );
 }
 
-// User Form Modal Component (Add/Edit)
-function UserFormModal({ mode, user = null, onClose, onSuccess }) {
+// Inventory Table Modal Component
+function InventoryTableModal({ products, loading, onClose, onRefresh }) {
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filter products based on search query (name, category, or ID)
+  const filteredProducts = products.filter((product) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase().trim();
+    const productId = String(product.product_id || "").toLowerCase();
+    const productName = (product.product_name || "").toLowerCase();
+    const category = (product.category || "").toLowerCase();
+    return (
+      productId.includes(query) ||
+      productName.includes(query) ||
+      category.includes(query)
+    );
+  });
+
+  const handleEdit = (product) => {
+    setSelectedProduct(product);
+    setShowEditModal(true);
+  };
+
+  const handleDelete = async (productId) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete product");
+      }
+
+      alert("Product deleted successfully");
+      onRefresh();
+    } catch (err) {
+      alert(err.message || "Failed to delete product");
+    }
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div
+        className={styles.modalContent}
+        onClick={(e) => e.stopPropagation()}
+        style={{ 
+          maxWidth: "1000px", 
+          width: "90%", 
+          height: "80vh",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden"
+        }}
+      >
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>Inventory Table</h2>
+          <button onClick={onClose} className={styles.modalCloseButton}>
+            ×
+          </button>
+        </div>
+
+        <div 
+          className={styles.modalBody} 
+          style={{ 
+            padding: "20px",
+            flex: 1,
+            overflow: "auto",
+            display: "flex",
+            flexDirection: "column"
+          }}
+        >
+          {/* Add Product Button and Search Bar */}
+          <div
+            style={{
+              display: "flex",
+              gap: "12px",
+              marginBottom: "16px",
+              alignItems: "center",
+              flexShrink: 0
+            }}
+          >
+            <button
+              onClick={() => setShowAddModal(true)}
+              style={{
+                padding: "10px 20px",
+                backgroundColor: "#10b981",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "14px",
+                fontWeight: 500,
+                cursor: "pointer",
+                transition: "background-color 0.2s",
+                whiteSpace: "nowrap",
+              }}
+              onMouseOver={(e) => (e.target.style.backgroundColor = "#059669")}
+              onMouseOut={(e) => (e.target.style.backgroundColor = "#10b981")}
+            >
+              + Add Product
+            </button>
+            <input
+              type="text"
+              placeholder="Search by name, category, or ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                flex: 1,
+                padding: "10px 16px",
+                border: "1px solid #d1d1d1",
+                borderRadius: "8px",
+                fontSize: "14px",
+                outline: "none",
+                transition: "border-color 0.2s, background-color 0.2s",
+                backgroundColor: "#f5f5f5",
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = "#3b82f6";
+                e.target.style.backgroundColor = "#ffffff";
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = "#d1d1d1";
+                e.target.style.backgroundColor = "#f5f5f5";
+              }}
+            />
+          </div>
+
+          {loading ? (
+            <div style={{ textAlign: "center", padding: "40px", flexShrink: 0 }}>
+              Loading products...
+            </div>
+          ) : products.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px", flexShrink: 0 }}>
+              No products found
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px", flexShrink: 0 }}>
+              No products match your search
+            </div>
+          ) : (
+            <div
+              style={{
+                flex: 1,
+                overflow: "auto",
+                border: "1px solid #e5e5e5",
+                borderRadius: "8px"
+              }}
+            >
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: "14px",
+                }}
+              >
+                <thead style={{ position: "sticky", top: 0, backgroundColor: "#ffffff", zIndex: 1 }}>
+                  <tr style={{ borderBottom: "2px solid #e5e5e5" }}>
+                    <th
+                      style={{
+                        padding: "12px",
+                        textAlign: "left",
+                        fontWeight: 600,
+                        color: "#333",
+                      }}
+                    >
+                      ID
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px",
+                        textAlign: "left",
+                        fontWeight: 600,
+                        color: "#333",
+                      }}
+                    >
+                      Name
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px",
+                        textAlign: "left",
+                        fontWeight: 600,
+                        color: "#333",
+                      }}
+                    >
+                      Category
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px",
+                        textAlign: "right",
+                        fontWeight: 600,
+                        color: "#333",
+                      }}
+                    >
+                      Price
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px",
+                        textAlign: "right",
+                        fontWeight: 600,
+                        color: "#333",
+                      }}
+                    >
+                      Stock
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px",
+                        textAlign: "left",
+                        fontWeight: 600,
+                        color: "#333",
+                      }}
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProducts.map((product, index) => (
+                    <tr
+                      key={product.product_id}
+                      style={{
+                        borderBottom: "1px solid #f0f0f0",
+                        backgroundColor:
+                          index % 2 === 0 ? "#ffffff" : "#fafafa",
+                      }}
+                    >
+                      <td style={{ padding: "12px", color: "#1a1a1a" }}>
+                        {product.product_id}
+                      </td>
+                      <td style={{ padding: "12px", color: "#1a1a1a" }}>
+                        {product.product_name || "N/A"}
+                      </td>
+                      <td style={{ padding: "12px" }}>
+                        <span
+                          style={{
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            backgroundColor:
+                              product.category === "Milk Drink"
+                                ? "#e0e7ff"
+                                : product.category === "Fruit Drink"
+                                ? "#fef3c7"
+                                : product.category === "Seasonal"
+                                ? "#fee2e2"
+                                : product.category === "Side"
+                                ? "#d1fae5"
+                                : "#f3f4f6",
+                            color:
+                              product.category === "Milk Drink"
+                                ? "#3730a3"
+                                : product.category === "Fruit Drink"
+                                ? "#92400e"
+                                : product.category === "Seasonal"
+                                ? "#991b1b"
+                                : product.category === "Side"
+                                ? "#065f46"
+                                : "#374151",
+                            fontWeight: 500,
+                          }}
+                        >
+                          {product.category || "N/A"}
+                        </span>
+                      </td>
+                      <td style={{ padding: "12px", textAlign: "right", color: "#1a1a1a" }}>
+                        ${parseFloat(product.price).toFixed(2)}
+                      </td>
+                      <td style={{ padding: "12px", textAlign: "right", color: "#1a1a1a" }}>
+                        <span
+                          style={{
+                            color: product.stock < 10 ? "#ef4444" : "#10b981",
+                            fontWeight: product.stock < 10 ? 600 : 400,
+                          }}
+                        >
+                          {product.stock !== undefined ? product.stock : "N/A"}
+                        </span>
+                      </td>
+                      <td style={{ padding: "12px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "8px",
+                          }}
+                        >
+                          <button
+                            onClick={() => handleEdit(product)}
+                            style={{
+                              padding: "6px 12px",
+                              backgroundColor: "#3b82f6",
+                              color: "#ffffff",
+                              border: "none",
+                              borderRadius: "6px",
+                              fontSize: "12px",
+                              cursor: "pointer",
+                              transition: "background-color 0.2s",
+                            }}
+                            onMouseOver={(e) =>
+                              (e.target.style.backgroundColor = "#2563eb")
+                            }
+                            onMouseOut={(e) =>
+                              (e.target.style.backgroundColor = "#3b82f6")
+                            }
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(product.product_id)}
+                            style={{
+                              padding: "6px 12px",
+                              backgroundColor: "#ef4444",
+                              color: "#ffffff",
+                              border: "none",
+                              borderRadius: "6px",
+                              fontSize: "12px",
+                              cursor: "pointer",
+                              transition: "background-color 0.2s",
+                            }}
+                            onMouseOver={(e) =>
+                              (e.target.style.backgroundColor = "#dc2626")
+                            }
+                            onMouseOut={(e) =>
+                              (e.target.style.backgroundColor = "#ef4444")
+                            }
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className={styles.modalFooter} style={{ flexShrink: 0 }}>
+          <button onClick={onClose} className={styles.modalCancelButton}>
+            Close
+          </button>
+        </div>
+      </div>
+
+      {/* Add Product Modal */}
+      {showAddModal && (
+        <ProductFormModal
+          mode="add"
+          onClose={() => setShowAddModal(false)}
+          onSuccess={() => {
+            setShowAddModal(false);
+            onRefresh();
+          }}
+        />
+      )}
+
+      {/* Edit Product Modal */}
+      {showEditModal && selectedProduct && (
+        <ProductFormModal
+          mode="edit"
+          product={selectedProduct}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedProduct(null);
+          }}
+          onSuccess={() => {
+            setShowEditModal(false);
+            setSelectedProduct(null);
+            onRefresh();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// Product Form Modal Component (Add/Edit)
+function ProductFormModal({ mode, product = null, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
-    user_name: user?.user_name || "",
-    email: user?.email || "",
-    role: user?.role || "member",
+    product_name: product?.product_name || "",
+    category: product?.category || "Milk Drink",
+    price: product?.price || "",
+    stock: product?.stock !== undefined ? product.stock : "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const categories = [
+    "Milk Drink", 
+    "Fruit Drink", 
+    "Seasonal", 
+    "Side", 
+    "Add-on", 
+    "Supply", 
+    "Merchandise"
+  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -931,13 +1357,30 @@ function UserFormModal({ mode, user = null, onClose, onSuccess }) {
     setLoading(true);
 
     try {
-      if (mode === "add") {
-        await createUser(formData);
-        alert("User created successfully!");
-      } else {
-        await updateUser(user.user_id, formData);
-        alert("User updated successfully!");
+      const url = mode === "add" 
+        ? `${process.env.NEXT_PUBLIC_API_URL}/products`
+        : `${process.env.NEXT_PUBLIC_API_URL}/products/${product.product_id}`;
+      
+      const method = mode === "add" ? "POST" : "PUT";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          price: parseFloat(formData.price),
+          stock: formData.stock !== "" ? parseInt(formData.stock) : null,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Operation failed");
       }
+
+      alert(mode === "add" ? "Product created successfully!" : "Product updated successfully!");
       onSuccess();
     } catch (err) {
       setError(err.message || "Operation failed");
@@ -963,7 +1406,7 @@ function UserFormModal({ mode, user = null, onClose, onSuccess }) {
       >
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>
-            {mode === "add" ? "Add User" : "Edit User"}
+            {mode === "add" ? "Add Product" : "Edit Product"}
           </h2>
           <button onClick={onClose} className={styles.modalCloseButton}>
             ×
@@ -997,13 +1440,14 @@ function UserFormModal({ mode, user = null, onClose, onSuccess }) {
                   color: "#333",
                 }}
               >
-                Name (Optional)
+                Product Name <span style={{ color: "#ef4444" }}>*</span>
               </label>
               <input
                 type="text"
-                name="user_name"
-                value={formData.user_name}
+                name="product_name"
+                value={formData.product_name}
                 onChange={handleChange}
+                required
                 style={{
                   width: "100%",
                   padding: "10px",
@@ -1026,14 +1470,52 @@ function UserFormModal({ mode, user = null, onClose, onSuccess }) {
                   color: "#333",
                 }}
               >
-                Email <span style={{ color: "#ef4444" }}>*</span>
+                Category <span style={{ color: "#ef4444" }}>*</span>
               </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
+              <select
+                name="category"
+                value={formData.category}
                 onChange={handleChange}
                 required
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  border: "1px solid #d1d1d1",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  backgroundColor: "#f5f5f5",
+                  color: "#1a1a1a",
+                  cursor: "pointer",
+                }}
+              >
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "6px",
+                  fontWeight: 500,
+                  fontSize: "14px",
+                  color: "#333",
+                }}
+              >
+                Price <span style={{ color: "#ef4444" }}>*</span>
+              </label>
+              <input
+                type="number"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                required
+                min="0"
+                step="0.01"
                 style={{
                   width: "100%",
                   padding: "10px",
@@ -1056,13 +1538,15 @@ function UserFormModal({ mode, user = null, onClose, onSuccess }) {
                   color: "#333",
                 }}
               >
-                Role <span style={{ color: "#ef4444" }}>*</span>
+                Stock (Optional)
               </label>
-              <select
-                name="role"
-                value={formData.role}
+              <input
+                type="number"
+                name="stock"
+                value={formData.stock}
                 onChange={handleChange}
-                required
+                min="0"
+                step="1"
                 style={{
                   width: "100%",
                   padding: "10px",
@@ -1072,11 +1556,7 @@ function UserFormModal({ mode, user = null, onClose, onSuccess }) {
                   backgroundColor: "#f5f5f5",
                   color: "#1a1a1a",
                 }}
-              >
-                <option value="member">Member</option>
-                <option value="cashier">Cashier</option>
-                <option value="manager">Manager</option>
-              </select>
+              />
             </div>
 
             <div className={styles.modalFooter}>
@@ -1096,8 +1576,8 @@ function UserFormModal({ mode, user = null, onClose, onSuccess }) {
                 {loading
                   ? "Processing..."
                   : mode === "add"
-                  ? "Create User"
-                  : "Update User"}
+                  ? "Create Product"
+                  : "Update Product"}
               </button>
             </div>
           </form>
