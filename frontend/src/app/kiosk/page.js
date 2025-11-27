@@ -33,6 +33,14 @@ const getCategoryImage = (category) => {
   return basePath ? `${basePath}?v=${Date.now()}` : null;
 };
 
+// derive product image path (prefers product.image_url, else product_id.png)
+const getProductImageSrc = (product) => {
+  if (product?.image_url) {
+    return product.image_url.startsWith("/") ? product.image_url : `/products/${product.image_url}`;
+  }
+  return `/products/${product.product_id}.png`;
+};
+
 export default function KioskPage() {
   const router = useRouter();
   const [products, setProducts] = useState([]);
@@ -324,16 +332,24 @@ export default function KioskPage() {
                 className={styles.productCard}
                 onClick={() => handleProductClick(product)}
               >
-                <div className={styles.productName}>{product.product_name}</div>
-                <div className={styles.productPrice}>
-                  ${parseFloat(product.price).toFixed(2)}
+                <div className={styles.productImageWrapper}>
+                  <img
+                    src={getProductImageSrc(product)}
+                    alt={product.product_name}
+                    loading="lazy"
+                    style={{ width: "100%", height: "120px", objectFit: "contain", borderRadius: 6 }}
+                  />
                 </div>
-                {product.stock !== undefined && (
-                  <div className={styles.productStock}>
-                    Stock: {product.stock}
-                  </div>
-                )}
-              </div>
+                 <div className={styles.productName}>{product.product_name}</div>
+                 <div className={styles.productPrice}>
+                   ${parseFloat(product.price).toFixed(2)}
+                 </div>
+                 {product.stock !== undefined && (
+                   <div className={styles.productStock}>
+                     Stock: {product.stock}
+                   </div>
+                 )}
+               </div>
             ))}
             {(!categorizedProducts[selectedCategory] ||
               categorizedProducts[selectedCategory].length === 0) && (
