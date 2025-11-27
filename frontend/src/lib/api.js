@@ -39,28 +39,31 @@ export async function fetchProducts() {
 }
 
 /**
- * Fetch all add-ons from the backend database
+ * Fetch add-ons (products with category "Add-on")
  * @returns {Promise<Array>} Array of add-on product objects from database
  * @throws {Error} If the request fails
  */
 export async function fetchAddOns() {
-  const response = await fetch(buildApiUrl('/products?category=Add-on'), {
+  const response = await fetch(buildApiUrl('/products'), {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
   });
-
+  
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(
       `Failed to fetch add-ons: ${response.status} ${response.statusText} - ${errorText}`
     );
   }
-
-  const data = await response.json();
-  // Handle both array responses and object responses with products array
-  return Array.isArray(data) ? data : data.products || data.data || [];
+  
+  const products = await response.json();
+  
+  // Filter only products with category "Add-on"
+  return Array.isArray(products) 
+    ? products.filter(product => product.category === "Add-on")
+    : [];
 }
 
 /**
@@ -287,7 +290,7 @@ export async function authenticateWithGoogle(credential) {
 
 // Create a new product
 export async function createProduct(productData) {
-  const response = await fetch(`${API_URL}/api/products`, {
+  const response = await fetch(buildApiUrl('/products'), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -305,7 +308,7 @@ export async function createProduct(productData) {
 
 // Update an existing product
 export async function updateProduct(productId, productData) {
-  const response = await fetch(`${API_URL}/api/products/${productId}`, {
+  const response = await fetch(buildApiUrl(`/products/${productId}`), {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -323,7 +326,7 @@ export async function updateProduct(productId, productData) {
 
 // Delete a product
 export async function deleteProduct(productId) {
-  const response = await fetch(`${API_URL}/api/products/${productId}`, {
+  const response = await fetch(buildApiUrl(`/products/${productId}`), {
     method: "DELETE",
   });
 
