@@ -288,6 +288,28 @@ export async function authenticateWithGoogle(credential) {
   return data;
 }
 
+/**
+ * Authenticate with GitHub
+ * @param {string} code - GitHub authorization code
+ * @returns {Promise<Object>} Authentication response
+ */
+export async function authenticateWithGitHub(code) {
+  const response = await fetch(buildApiUrl("/auth/github"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ code }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "GitHub authentication failed");
+  }
+
+  return response.json();
+}
+
 // Create a new product
 export async function createProduct(productData) {
   const response = await fetch(buildApiUrl('/products'), {
