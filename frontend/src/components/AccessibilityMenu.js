@@ -52,6 +52,7 @@ export default function AccessibilityMenu() {
     const savedHighContrast = localStorage.getItem("highContrast") === "true";
     const savedLanguage = localStorage.getItem("selectedLanguage") || "en";
     const savedLanguageTranslation = localStorage.getItem("languageTranslation") === "true";
+    const savedLargeText = localStorage.getItem("largeText") === "true";
 
     if (savedHighContrast) {
       setHighContrast(true);
@@ -64,6 +65,11 @@ export default function AccessibilityMenu() {
       // Load the translation after the component mounts
       setTimeout(() => applyTranslation(savedLanguage, 15), 500);
     }
+
+    if (savedLargeText) {
+      setLargeText(true);
+      applyLargeText(true);
+    }
   }, []);
 
   // Function to apply high contrast mode
@@ -74,6 +80,19 @@ export default function AccessibilityMenu() {
     } else {
       document.documentElement.style.setProperty('--contrast-filter', 'none');
       document.body.classList.remove('high-contrast-mode');
+    }
+  };
+
+  // Function to apply large text mode
+  const applyLargeText = (enabled) => {
+    if (enabled) {
+      document.body.classList.add('large-text-mode');
+      document.documentElement.style.setProperty('--base-font-size', '1.25rem');
+      document.documentElement.style.setProperty('--icon-scale', '1.25');
+    } else {
+      document.body.classList.remove('large-text-mode');
+      document.documentElement.style.setProperty('--base-font-size', '1rem');
+      document.documentElement.style.setProperty('--icon-scale', '1');
     }
   };
 
@@ -94,6 +113,10 @@ export default function AccessibilityMenu() {
     // Apply high contrast
     applyHighContrast(highContrast);
     localStorage.setItem("highContrast", highContrast.toString());
+
+    // Apply large text
+    applyLargeText(largeText);
+    localStorage.setItem("largeText", largeText.toString());
 
     // Apply translation if enabled
     if (languageTranslation) {

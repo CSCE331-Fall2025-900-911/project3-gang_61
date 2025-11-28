@@ -2,6 +2,8 @@
   --background: #ffffff;
   --foreground: #171717;
   --contrast-filter: none;
+  --base-font-size: 1rem;
+  --icon-scale: 1;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -24,6 +26,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   filter: var(--contrast-filter, none);
+  font-size: var(--base-font-size);
 }
 
 * {
@@ -101,4 +104,102 @@ body.high-contrast-mode [class*="divider"],
 body.high-contrast-mode [class*="separator"] {
   border-color: black !important;
   border-width: 2px !important;
+}
+
+/* Large text mode */
+body.large-text-mode {
+  font-size: 1.25rem;
+}
+
+body.large-text-mode h1 {
+  font-size: 2.5rem;
+}
+
+body.large-text-mode h2 {
+  font-size: 2rem;
+}
+
+body.large-text-mode h3 {
+  font-size: 1.75rem;
+}
+
+body.large-text-mode h4 {
+  font-size: 1.5rem;
+}
+
+body.large-text-mode h5 {
+  font-size: 1.25rem;
+}
+
+body.large-text-mode button,
+body.large-text-mode input,
+body.large-text-mode select,
+body.large-text-mode textarea {
+  font-size: 1.1rem;
+  padding: 0.75rem 1.25rem;
+}
+
+body.large-text-mode img,
+body.large-text-mode svg {
+  transform: scale(1.25);
+  transform-origin: center;
+}
+
+/* Kiosk view specific - drink containers */
+body.large-text-mode [class*="drinkOption"],
+body.large-text-mode [class*="drink-option"],
+body.large-text-mode [class*="drinkContainer"],
+body.large-text-mode [class*="drink-container"],
+body.large-text-mode [class*="menuItem"],
+body.large-text-mode [class*="menu-item"] {
+  transform: scale(1.2);
+  transform-origin: center;
+  margin: 1rem;
+}
+
+/* Kiosk view - drink names and text */
+body.large-text-mode [class*="drinkName"],
+body.large-text-mode [class*="drink-name"],
+body.large-text-mode [class*="drinkTitle"],
+body.large-text-mode [class*="drink-title"],
+body.large-text-mode [class*="itemName"],
+body.large-text-mode [class*="item-name"] {
+  font-size: 1.5rem !important;
+  line-height: 1.4;
+}
+
+/* Kiosk view - drink prices and details */
+body.large-text-mode [class*="drinkPrice"],
+body.large-text-mode [class*="drink-price"],
+body.large-text-mode [class*="price"],
+body.large-text-mode [class*="itemPrice"],
+body.large-text-mode [class*="item-price"] {
+  font-size: 1.3rem !important;
+}
+
+/* Kiosk view - drink descriptions */
+body.large-text-mode [class*="drinkDescription"],
+body.large-text-mode [class*="drink-description"],
+body.large-text-mode [class*="description"],
+body.large-text-mode [class*="itemDescription"],
+body.large-text-mode [class*="item-description"] {
+  font-size: 1.15rem !important;
+  line-height: 1.5;
+}
+
+/* Kiosk view - drink images */
+body.large-text-mode [class*="drinkImage"],
+body.large-text-mode [class*="drink-image"],
+body.large-text-mode [class*="itemImage"],
+body.large-text-mode [class*="item-image"] {
+  transform: scale(1.3);
+  transform-origin: center;
+}
+
+/* Adjust grid/flex layouts to accommodate larger items */
+body.large-text-mode [class*="drinkGrid"],
+body.large-text-mode [class*="drink-grid"],
+body.large-text-mode [class*="menuGrid"],
+body.large-text-mode [class*="menu-grid"] {
+  gap: 2rem;
 }
