@@ -7,6 +7,7 @@ import { fetchProducts, fetchAddOns, submitOrder } from "@/lib/api";
 import { logout } from "@/lib/auth";
 import { useRequireAuth } from "@/lib/useAuth";
 import AccessibilityMenu from "@/components/AccessibilityMenu";
+import CheckoutSuccessModal from "@/components/CheckoutSuccessModal";
 import styles from "./kiosk.module.css";
 
 // Map database categories to display categories
@@ -52,6 +53,8 @@ export default function KioskPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [memberId, setMemberId] = useState(0);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [orderSubtotal, setOrderSubtotal] = useState(0);
 
   // Verify that the user logged in through sign-in services
   useRequireAuth(router);
@@ -228,6 +231,7 @@ export default function KioskPage() {
     }
 
     try {
+      const total = calculateTotal();
       const orderData = {
         items: cart.map((item) => ({
           product_id: item.product.product_id,
@@ -236,22 +240,17 @@ export default function KioskPage() {
           price: item.product.price,
           modifications: item.modifications,
         })),
-        total: calculateTotal(),
+        total: total,
         timestamp: new Date().toISOString(),
-        // For kiosk orders: use logged-in user's ID as member_id, employee_id is always 0 (self-service)
-        // For cashier orders (future): employee_id will be non-zero
         member_id: memberId,
         employee_id: 0, // Always 0 for kiosk orders (self-service)
       };
 
-      const result = await submitOrder(orderData);
+      await submitOrder(orderData);
 
-      // Show success message with order confirmation if available
-      const successMessage = result.orderId
-        ? `Order placed successfully! Order ID: ${result.orderId}`
-        : result.message || "Order placed successfully!";
-
-      alert(successMessage);
+      // Show success modal with subtotal
+      setOrderSubtotal(total);
+      setShowSuccessModal(true);
       clearCart();
     } catch (error) {
       const errorMessage =
@@ -498,6 +497,14 @@ export default function KioskPage() {
           }
         />
       )}
+
+      {/* Checkout Success Modal */}
+      <CheckoutSuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        subtotal={orderSubtotal}
+        viewType="kiosk"
+      />
     </div>
   );
 }

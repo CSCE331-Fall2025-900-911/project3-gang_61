@@ -1,0 +1,144 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 0;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modalHeader {
+  padding: 32px 24px 24px 24px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.modalTitle {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+  text-align: center;
+}
+
+.modalBody {
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.successIcon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 32px;
+  background: #e84545;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: #ffffff;
+  font-weight: bold;
+  box-shadow: 0 4px 16px rgba(232, 69, 69, 0.3);
+}
+
+.subtotalSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 32px;
+  background: #f5f5f5;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  margin-top: 16px;
+}
+
+.subtotalLabel {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.subtotalAmount {
+  font-size: 32px;
+  font-weight: 800;
+  color: #e84545;
+}
+
+.modalFooter {
+  padding: 24px 24px 32px 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.closeButton {
+  padding: 14px 56px;
+  background-color: #3b82f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.closeButton:hover {
+  background-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.closeButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Large text mode support */
+body.large-text-mode .modalTitle {
+  font-size: 2.25rem;
+}
+
+body.large-text-mode .successIcon {
+  width: 100px;
+  height: 100px;
+  font-size: 60px;
+}
+
+body.large-text-mode .subtotalLabel {
+  font-size: 1.5rem;
+}
+
+body.large-text-mode .subtotalAmount {
+  font-size: 2.25rem;
+}
+
+body.large-text-mode .closeButton {
+  font-size: 1.35rem;
+  padding: 18px 64px;
+}

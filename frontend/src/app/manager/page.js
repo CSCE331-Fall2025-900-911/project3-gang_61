@@ -16,6 +16,7 @@ import {
 import { logout } from "@/lib/auth";
 import { useRequireAuth } from "@/lib/useAuth";
 import AccessibilityMenu from "@/components/AccessibilityMenu";
+import CheckoutSuccessModal from "@/components/CheckoutSuccessModal";
 import styles from "./manager.module.css";
 
 // Map database categories to display categories
@@ -47,6 +48,8 @@ export default function CashierPage() {
   const [transactions, setTransactions] = useState([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [transactionsError, setTransactionsError] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [orderSubtotal, setOrderSubtotal] = useState(0);
 
   // Verify that the user logged in through sign-in services
   // TODO verify user is a manager
@@ -199,6 +202,7 @@ export default function CashierPage() {
     }
 
     try {
+      const total = calculateTotal();
       const orderData = {
         items: cart.map((item) => ({
           product_id: item.product.product_id,
@@ -207,21 +211,17 @@ export default function CashierPage() {
           price: item.product.price,
           modifications: item.modifications,
         })),
-        total: calculateTotal(),
+        total: total,
         timestamp: new Date().toISOString(),
-        // For cashier orders: employee_id should be non-zero
         member_id: memberId,
         employee_id: employeeId || 0,
       };
 
-      const result = await submitOrder(orderData);
+      await submitOrder(orderData);
 
-      // Show success message with order confirmation if available
-      const successMessage = result.orderId
-        ? `Order placed successfully! Order ID: ${result.orderId}`
-        : result.message || "Order placed successfully!";
-
-      alert(successMessage);
+      // Show success modal with subtotal
+      setOrderSubtotal(total);
+      setShowSuccessModal(true);
       clearCart();
       
       // Refresh transactions after successful order
@@ -582,6 +582,14 @@ export default function CashierPage() {
           onRefresh={refreshProducts}
         />
       )}
+
+      {/* Checkout Success Modal */}
+      <CheckoutSuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        subtotal={orderSubtotal}
+        viewType="manager"
+      />
     </div>
   );
 }

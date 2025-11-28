@@ -6,6 +6,7 @@ import { fetchProducts, fetchAddOns, submitOrder } from "@/lib/api";
 import { logout } from "@/lib/auth";
 import { useRequireAuth } from "@/lib/useAuth";
 import AccessibilityMenu from "@/components/AccessibilityMenu";
+import CheckoutSuccessModal from "@/components/CheckoutSuccessModal";
 import styles from "./cashier.module.css";
 import Image from "next/image";
 
@@ -31,6 +32,8 @@ export default function CashierPage() {
   const [error, setError] = useState(null);
   const [memberId, setMemberId] = useState(0);
   const [employeeId, setEmployeeId] = useState(0);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [orderSubtotal, setOrderSubtotal] = useState(0);
 
   // Verify that the user logged in through sign-in services
   useRequireAuth(router);
@@ -154,6 +157,7 @@ export default function CashierPage() {
     }
 
     try {
+      const total = calculateTotal();
       const orderData = {
         items: cart.map((item) => ({
           product_id: item.product.product_id,
@@ -162,21 +166,17 @@ export default function CashierPage() {
           price: item.product.price,
           modifications: item.modifications,
         })),
-        total: calculateTotal(),
+        total: total,
         timestamp: new Date().toISOString(),
-        // For cashier orders: employee_id should be non-zero
         member_id: memberId,
         employee_id: employeeId || 0,
       };
 
-      const result = await submitOrder(orderData);
+      await submitOrder(orderData);
 
-      // Show success message with order confirmation if available
-      const successMessage = result.orderId
-        ? `Order placed successfully! Order ID: ${result.orderId}`
-        : result.message || "Order placed successfully!";
-
-      alert(successMessage);
+      // Show success modal with subtotal
+      setOrderSubtotal(total);
+      setShowSuccessModal(true);
       clearCart();
     } catch (error) {
       const errorMessage =
@@ -388,6 +388,14 @@ export default function CashierPage() {
           }
         />
       )}
+
+      {/* Checkout Success Modal */}
+      <CheckoutSuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        subtotal={orderSubtotal}
+        viewType="cashier"
+      />
     </div>
   );
 }
