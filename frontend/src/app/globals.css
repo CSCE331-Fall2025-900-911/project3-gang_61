@@ -1,6 +1,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --contrast-filter: none;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,6 +23,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  filter: var(--contrast-filter, none);
 }
 
 * {
@@ -57,4 +59,46 @@ a {
 
 body {
   top: 0 !important;
+}
+
+/* High contrast mode borders */
+body.high-contrast-mode button,
+body.high-contrast-mode a,
+body.high-contrast-mode input,
+body.high-contrast-mode select,
+body.high-contrast-mode textarea {
+  outline: 2px solid black !important;
+  outline-offset: -2px !important;
+}
+
+body.high-contrast-mode [class*="container"],
+body.high-contrast-mode [class*="box"],
+body.high-contrast-mode [class*="card"],
+body.high-contrast-mode [class*="panel"],
+body.high-contrast-mode [class*="modal"],
+body.high-contrast-mode section,
+body.high-contrast-mode main,
+body.high-contrast-mode aside {
+  outline: 1px solid black !important;
+  outline-offset: -1px !important;
+}
+
+body.high-contrast-mode [class*="drink"],
+body.high-contrast-mode [class*="item"],
+body.high-contrast-mode [class*="product"],
+body.high-contrast-mode [class*="cart"],
+body.high-contrast-mode [class*="transaction"],
+body.high-contrast-mode [class*="order"],
+body.high-contrast-mode [class*="menu"] > *,
+body.high-contrast-mode [class*="grid"] > *,
+body.high-contrast-mode [class*="list"] > * {
+  outline: 1px solid black !important;
+  outline-offset: -1px !important;
+}
+
+body.high-contrast-mode hr,
+body.high-contrast-mode [class*="divider"],
+body.high-contrast-mode [class*="separator"] {
+  border-color: black !important;
+  border-width: 2px !important;
 }

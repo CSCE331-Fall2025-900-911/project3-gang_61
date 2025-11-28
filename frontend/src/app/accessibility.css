@@ -1,0 +1,186 @@
+/* High Contrast Mode Styles */
+:root.high-contrast {
+  /* Override all color variables with high contrast versions */
+  --bg-primary: #000000;
+  --bg-secondary: #1a1a1a;
+  --text-primary: #ffffff;
+  --text-secondary: #ffff00;
+  --border-color: #ffffff;
+  --button-bg: #ffff00;
+  --button-text: #000000;
+  --button-hover: #ffff66;
+  --link-color: #00ffff;
+  --error-color: #ff0000;
+  --success-color: #00ff00;
+}
+
+/* Apply high contrast styles globally */
+html.high-contrast {
+  filter: contrast(1.5);
+}
+
+html.high-contrast body {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Exclude Google Translate elements from high contrast */
+html.high-contrast .skiptranslate,
+html.high-contrast .goog-te-banner-frame,
+html.high-contrast .goog-te-menu-frame,
+html.high-contrast #google_translate_element,
+html.high-contrast .goog-te-gadget,
+html.high-contrast [id^="goog-gt-"] {
+  filter: none !important;
+  background-color: initial !important;
+  color: initial !important;
+  border: none !important;
+}
+
+/* Buttons */
+html.high-contrast button:not(.goog-te-menu2-item):not([id^="goog-"]) {
+  background-color: #ffff00 !important;
+  color: #000000 !important;
+  border: 2px solid #ffffff !important;
+  font-weight: bold !important;
+}
+
+html.high-contrast button:not(.goog-te-menu2-item):not([id^="goog-"]):hover {
+  background-color: #ffff66 !important;
+}
+
+html.high-contrast button:not(.goog-te-menu2-item):not([id^="goog-"]):disabled {
+  background-color: #666666 !important;
+  color: #cccccc !important;
+  border-color: #666666 !important;
+}
+
+/* Links */
+html.high-contrast a:not([id^="goog-"]) {
+  color: #00ffff !important;
+  text-decoration: underline !important;
+}
+
+html.high-contrast a:not([id^="goog-"]):hover {
+  color: #66ffff !important;
+}
+
+/* Input fields */
+html.high-contrast input:not([id^="goog-"]),
+html.high-contrast select:not(.goog-te-combo):not([id^="goog-"]),
+html.high-contrast textarea:not([id^="goog-"]) {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+}
+
+html.high-contrast input:not([id^="goog-"]):focus,
+html.high-contrast select:not(.goog-te-combo):not([id^="goog-"]):focus,
+html.high-contrast textarea:not([id^="goog-"]):focus {
+  outline: 3px solid #ffff00 !important;
+  outline-offset: 2px;
+}
+
+/* Allow Google Translate select to work normally */
+html.high-contrast select.goog-te-combo {
+  background-color: white !important;
+  color: black !important;
+  border: 1px solid #ccc !important;
+  filter: none !important;
+}
+
+/* Cards and containers */
+html.high-contrast div[class*="card"]:not([id^="goog-"]),
+html.high-contrast div[class*="container"]:not([id^="google_translate"]):not(.skiptranslate),
+html.high-contrast div[class*="panel"]:not([id^="goog-"]) {
+  background-color: #1a1a1a !important;
+  border: 2px solid #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Tables */
+html.high-contrast table:not([class*="goog-"]) {
+  border: 2px solid #ffffff !important;
+}
+
+html.high-contrast th:not([class*="goog-"]) {
+  background-color: #ffff00 !important;
+  color: #000000 !important;
+  border: 2px solid #ffffff !important;
+}
+
+html.high-contrast td:not([class*="goog-"]) {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  border: 1px solid #ffffff !important;
+}
+
+html.high-contrast tr:not([class*="goog-"]):hover td {
+  background-color: #333333 !important;
+}
+
+/* Images - add a border for visibility */
+html.high-contrast img:not([id^="goog-"]) {
+  border: 1px solid #ffffff !important;
+}
+
+/* Accessibility menu itself should remain readable */
+html.high-contrast div[class*="accessibilityMenu"] {
+  background-color: #1a1a1a !important;
+  border: 3px solid #ffff00 !important;
+}
+
+/* Google Translate banner at top */
+html.high-contrast .goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+
+html.high-contrast body {
+  top: 0 !important;
+}
+
+/* Ensure translated text is visible */
+html.high-contrast font[style] {
+  background-color: transparent !important;
+}
+
+/* Large Text Mode Styles */
+html.large-text {
+  font-size: 125% !important;
+}
+
+html.large-text button {
+  font-size: 1.25em !important;
+  padding: 14px 20px !important;
+}
+
+html.large-text input,
+html.large-text select,
+html.large-text textarea {
+  font-size: 1.25em !important;
+  padding: 12px !important;
+}
+
+html.large-text h1 {
+  font-size: 3em !important;
+}
+
+html.large-text h2 {
+  font-size: 2.5em !important;
+}
+
+html.large-text h3 {
+  font-size: 2em !important;
+}
+
+/* Combine both modes */
+html.high-contrast.large-text {
+  font-size: 125% !important;
+}
+
+/* Make sure Google Translate elements stay visible in large text mode too */
+html.large-text .skiptranslate,
+html.large-text #google_translate_element,
+html.large-text .goog-te-gadget {
+  font-size: initial !important;
+}

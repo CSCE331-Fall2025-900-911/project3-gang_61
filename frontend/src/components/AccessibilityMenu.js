@@ -45,42 +45,96 @@ export default function AccessibilityMenu() {
   const [selectedLanguage, setSelectedLanguage] = useState("en");
   const [largeText, setLargeText] = useState(false);
   const menuRef = useRef(null);
+  const translateScriptLoaded = useRef(false);
 
-  // Simple function to apply translation - just change the select value
-  const applyTranslation = () => {
-    const select = document.querySelector(".goog-te-combo");
-    if (select) {
-      select.value = selectedLanguage;
-      select.dispatchEvent(new Event("change"));
+  // Load saved preferences on mount
+  useEffect(() => {
+    const savedHighContrast = localStorage.getItem("highContrast") === "true";
+    const savedLanguage = localStorage.getItem("selectedLanguage") || "en";
+    const savedLanguageTranslation = localStorage.getItem("languageTranslation") === "true";
+
+    if (savedHighContrast) {
+      setHighContrast(true);
+      applyHighContrast(true);
+    }
+
+    if (savedLanguageTranslation) {
+      setLanguageTranslation(true);
+      setSelectedLanguage(savedLanguage);
+      // Load the translation after the component mounts
+      setTimeout(() => applyTranslation(savedLanguage, 15), 500);
+    }
+  }, []);
+
+  // Function to apply high contrast mode
+  const applyHighContrast = (enabled) => {
+    if (enabled) {
+      document.documentElement.style.setProperty('--contrast-filter', 'contrast(1.5) saturate(1.3)');
+      document.body.classList.add('high-contrast-mode');
+    } else {
+      document.documentElement.style.setProperty('--contrast-filter', 'none');
+      document.body.classList.remove('high-contrast-mode');
     }
   };
 
-  // Initialize Google Translate - simple approach like W3Schools
+  // Function to apply translation with retry logic
+  const applyTranslation = (language, retries = 15) => {
+    const select = document.querySelector(".goog-te-combo");
+    if (select) {
+      select.value = language;
+      select.dispatchEvent(new Event("change"));
+    } else if (retries > 0) {
+      // Retry after 200ms if the widget hasn't loaded yet
+      setTimeout(() => applyTranslation(language, retries - 1), 200);
+    }
+  };
+
+  // Handle save button click
+  const handleSave = () => {
+    // Apply high contrast
+    applyHighContrast(highContrast);
+    localStorage.setItem("highContrast", highContrast.toString());
+
+    // Apply translation if enabled
+    if (languageTranslation) {
+      localStorage.setItem("languageTranslation", "true");
+      localStorage.setItem("selectedLanguage", selectedLanguage);
+      applyTranslation(selectedLanguage);
+    } else {
+      localStorage.setItem("languageTranslation", "false");
+      localStorage.removeItem("selectedLanguage");
+      // Reset to English if translation is disabled
+      const select = document.querySelector(".goog-te-combo");
+      if (select) {
+        select.value = "en";
+        select.dispatchEvent(new Event("change"));
+      }
+    }
+
+    setIsOpen(false);
+  };
+
+  // Initialize Google Translate once when enabled
   useEffect(() => {
     if (typeof window === "undefined" || !languageTranslation) return;
 
     // Check if script already exists
-    if (document.getElementById("google-translate-script")) {
+    if (translateScriptLoaded.current || document.getElementById("google-translate-script")) {
       return;
     }
 
-    // Add the Google Translate script
-    const script = document.createElement("script");
-    script.id = "google-translate-script";
-    script.type = "text/javascript";
-    script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
-    script.async = true;
-    document.body.appendChild(script);
+    translateScriptLoaded.current = true;
 
     // Create the div for Google Translate
     let translateDiv = document.getElementById("google_translate_element");
     if (!translateDiv) {
       translateDiv = document.createElement("div");
       translateDiv.id = "google_translate_element";
+      translateDiv.style.display = "none"; // Hide the widget
       document.body.appendChild(translateDiv);
     }
 
-    // Initialize function - simple like W3Schools
+    // Initialize function
     window.googleTranslateElementInit = () => {
       if (window.google && window.google.translate) {
         new window.google.translate.TranslateElement(
@@ -92,6 +146,14 @@ export default function AccessibilityMenu() {
         );
       }
     };
+
+    // Add the Google Translate script
+    const script = document.createElement("script");
+    script.id = "google-translate-script";
+    script.type = "text/javascript";
+    script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+    script.async = true;
+    document.body.appendChild(script);
   }, [languageTranslation]);
 
   // Close menu when clicking outside
@@ -195,11 +257,9 @@ export default function AccessibilityMenu() {
 
           <div className={styles.menuFooter}>
             <button
-              onClick={applyTranslation}
+              onClick={handleSave}
               className={styles.saveButton}
-              disabled={!languageTranslation}
-              aria-disabled={!languageTranslation}
-              title={languageTranslation ? "Apply translation" : "Enable Language Translation to save"}
+              title="Save accessibility preferences"
             >
               Save
             </button>
