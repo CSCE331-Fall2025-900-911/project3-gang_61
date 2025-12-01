@@ -48,9 +48,11 @@ a {
 
 /* Google Translate - Hide UI but keep functional */
 #google_translate_element {
-  position: absolute;
-  left: -9999px;
-  opacity: 0;
+  display: none !important;
+  visibility: hidden !important;
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
 }
 
 .goog-te-banner-frame,
@@ -58,10 +60,12 @@ a {
 .goog-te-gadget,
 .goog-logo-link {
   display: none !important;
+  visibility: hidden !important;
 }
 
 body {
   top: 0 !important;
+  position: static !important;
 }
 
 /* High contrast mode borders */
@@ -70,8 +74,7 @@ body.high-contrast-mode a,
 body.high-contrast-mode input,
 body.high-contrast-mode select,
 body.high-contrast-mode textarea {
-  outline: 2px solid black !important;
-  outline-offset: -2px !important;
+  border: 2px solid #000000 !important;
 }
 
 body.high-contrast-mode [class*="container"],
@@ -82,8 +85,7 @@ body.high-contrast-mode [class*="modal"],
 body.high-contrast-mode section,
 body.high-contrast-mode main,
 body.high-contrast-mode aside {
-  outline: 1px solid black !important;
-  outline-offset: -1px !important;
+  border: 1px solid #000000 !important;
 }
 
 body.high-contrast-mode [class*="drink"],
@@ -95,15 +97,42 @@ body.high-contrast-mode [class*="order"],
 body.high-contrast-mode [class*="menu"] > *,
 body.high-contrast-mode [class*="grid"] > *,
 body.high-contrast-mode [class*="list"] > * {
-  outline: 1px solid black !important;
-  outline-offset: -1px !important;
+  border: 1px solid #000000 !important;
 }
 
 body.high-contrast-mode hr,
 body.high-contrast-mode [class*="divider"],
 body.high-contrast-mode [class*="separator"] {
-  border-color: black !important;
-  border-width: 2px !important;
+  border-color: #000000 !important;
+  background-color: #000000 !important;
+}
+
+/* High contrast mode - Convert gray text to black */
+body.high-contrast-mode {
+  color: #000000 !important;
+}
+
+body.high-contrast-mode *[style*="color: gray"],
+body.high-contrast-mode *[style*="color: grey"],
+body.high-contrast-mode *[style*="color: #666"],
+body.high-contrast-mode *[style*="color: #777"],
+body.high-contrast-mode *[style*="color: #888"],
+body.high-contrast-mode *[style*="color: #999"],
+body.high-contrast-mode *[style*="color: #aaa"],
+body.high-contrast-mode *[style*="color: #bbb"],
+body.high-contrast-mode *[style*="color: #ccc"],
+body.high-contrast-mode *[class*="gray"],
+body.high-contrast-mode *[class*="grey"],
+body.high-contrast-mode *[class*="muted"],
+body.high-contrast-mode *[class*="secondary"],
+body.high-contrast-mode *[class*="disabled"]:not(:disabled),
+body.high-contrast-mode span,
+body.high-contrast-mode p,
+body.high-contrast-mode div,
+body.high-contrast-mode label,
+body.high-contrast-mode td,
+body.high-contrast-mode th {
+  color: #000000 !important;
 }
 
 /* Large text mode */
