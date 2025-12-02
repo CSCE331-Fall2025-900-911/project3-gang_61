@@ -28,7 +28,7 @@ export function logout(router = null, redirectPath = "/") {
  */
 const ROLE_ACCESS = {
   manager: {
-    allowedPages: ["/manager", "/cashier", "/kiosk"],
+    allowedPages: ["/manager", "/cashier", "/kiosk", "/manager/reports"],
     description: "Managers can access all pages",
   },
   cashier: {

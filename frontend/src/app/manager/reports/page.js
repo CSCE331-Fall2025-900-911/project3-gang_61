@@ -1,0 +1,458 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import {
+  fetchDailySales,
+  fetchLowestStock,
+  fetchPeakSales,
+  fetchSalesHistory,
+  fetchWeeklySales,
+  fetchTop50Orders,
+  fetchTop5MenuItems,
+  fetchTop5Ingredients,
+  generateXReport as generateXReportAPI,
+} from "@/lib/api";
+import { logout } from "@/lib/auth";
+import { useRequireAuth } from "@/lib/useAuth";
+import AccessibilityMenu from "@/components/AccessibilityMenu";
+import styles from "./reports.module.css";
+
+export default function ReportsPage() {
+  const router = useRouter();
+  const [selectedQuery, setSelectedQuery] = useState(null);
+  const [queryResults, setQueryResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [xReportDate, setXReportDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [xReportData, setXReportData] = useState(null);
+  const [loadingXReport, setLoadingXReport] = useState(false);
+
+  useRequireAuth(router);
+
+  const queries = [
+    { id: "daily-sales", label: "Daily Sales" },
+    { id: "lowest-stock", label: "Lowest Stock" },
+    { id: "peak-sales", label: "Peak Sales" },
+    { id: "sales-history", label: "Sales History Ascending" },
+    { id: "weekly-sales", label: "Weekly Sales" },
+    { id: "top-50-orders", label: "Top 50 Recent Orders" },
+    { id: "top-5-menu-items", label: "Top 5 Most Ordered Menu Items" },
+    { id: "top-5-ingredients", label: "Top 5 Most Used Ingredients" },
+  ];
+
+  const handleQueryClick = async (queryId) => {
+    setSelectedQuery(queryId);
+    setLoading(true);
+    setError(null);
+    setQueryResults(null);
+
+    try {
+      let results;
+      switch (queryId) {
+        case "daily-sales":
+          results = await fetchDailySales();
+          break;
+        case "lowest-stock":
+          results = await fetchLowestStock();
+          break;
+        case "peak-sales":
+          results = await fetchPeakSales();
+          break;
+        case "sales-history":
+          results = await fetchSalesHistory();
+          break;
+        case "weekly-sales":
+          results = await fetchWeeklySales();
+          break;
+        case "top-50-orders":
+          results = await fetchTop50Orders();
+          break;
+        case "top-5-menu-items":
+          results = await fetchTop5MenuItems();
+          break;
+        case "top-5-ingredients":
+          results = await fetchTop5Ingredients();
+          break;
+        default:
+          results = null;
+      }
+      setQueryResults(results);
+    } catch (err) {
+      setError(err.message || "Failed to fetch report data");
+      console.error("Error fetching report:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleXReportGenerate = async () => {
+    setLoadingXReport(true);
+    setXReportData(null);
+    setError(null);
+    try {
+      const report = await generateXReportAPI(xReportDate);
+      setXReportData(report);
+    } catch (err) {
+      setError(err.message || "Failed to generate X-Report");
+      console.error("Error generating X-Report:", err);
+    } finally {
+      setLoadingXReport(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logout(router);
+  };
+
+  const renderQueryResults = () => {
+    if (loading) {
+      return <div className={styles.loading}>Loading report data...</div>;
+    }
+
+    if (error) {
+      return <div className={styles.error}>{error}</div>;
+    }
+
+    if (!queryResults) {
+      return (
+        <div className={styles.emptyResults}>
+          Select a query from the left column to view results
+        </div>
+      );
+    }
+
+    const query = queries.find((q) => q.id === selectedQuery);
+    if (!query) return null;
+
+    switch (selectedQuery) {
+      case "daily-sales":
+        return (
+          <div className={styles.resultsContainer}>
+            <h3 className={styles.resultsTitle}>Daily Sales</h3>
+            <table className={styles.resultsTable}>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Total Orders</th>
+                  <th>Total Revenue ($)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {queryResults.map((row, idx) => (
+                  <tr key={idx}>
+                    <td>{new Date(row.day).toLocaleDateString()}</td>
+                    <td>{row.total_orders}</td>
+                    <td>${parseFloat(row.total_revenue || 0).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+
+      case "lowest-stock":
+        return (
+          <div className={styles.resultsContainer}>
+            <h3 className={styles.resultsTitle}>Lowest Stock Items</h3>
+            <table className={styles.resultsTable}>
+              <thead>
+                <tr>
+                  <th>Product ID</th>
+                  <th>Product Name</th>
+                  <th>Category</th>
+                  <th>Stock</th>
+                </tr>
+              </thead>
+              <tbody>
+                {queryResults.map((row, idx) => (
+                  <tr key={idx}>
+                    <td>{row.product_id}</td>
+                    <td>{row.product_name}</td>
+                    <td>{row.category}</td>
+                    <td className={row.stock < 10 ? styles.lowStock : ""}>
+                      {row.stock}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+
+      case "peak-sales":
+        return (
+          <div className={styles.resultsContainer}>
+            <h3 className={styles.resultsTitle}>Peak Sales</h3>
+            <table className={styles.resultsTable}>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Total Orders</th>
+                  <th>Daily Total ($)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {queryResults.map((row, idx) => (
+                  <tr key={idx}>
+                    <td>{new Date(row.day).toLocaleDateString()}</td>
+                    <td>{row.total_orders}</td>
+                    <td>${parseFloat(row.daily_total || 0).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+
+      case "sales-history":
+        return (
+          <div className={styles.resultsContainer}>
+            <h3 className={styles.resultsTitle}>Sales History Ascending</h3>
+            <table className={styles.resultsTable}>
+              <thead>
+                <tr>
+                  <th>Hour Start</th>
+                  <th>Orders Count</th>
+                  <th>Total Sales ($)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {queryResults.map((row, idx) => (
+                  <tr key={idx}>
+                    <td>{new Date(row.hour_start).toLocaleString()}</td>
+                    <td>{row.orders_count}</td>
+                    <td>${parseFloat(row.total_sales || 0).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+
+      case "weekly-sales":
+        return (
+          <div className={styles.resultsContainer}>
+            <h3 className={styles.resultsTitle}>Weekly Sales</h3>
+            <table className={styles.resultsTable}>
+              <thead>
+                <tr>
+                  <th>Week Start</th>
+                  <th>Total Orders</th>
+                  <th>Total Revenue ($)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {queryResults.map((row, idx) => (
+                  <tr key={idx}>
+                    <td>{new Date(row.week_start).toLocaleDateString()}</td>
+                    <td>{row.total_orders}</td>
+                    <td>${parseFloat(row.total_revenue || 0).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+
+      case "top-50-orders":
+        return (
+          <div className={styles.resultsContainer}>
+            <h3 className={styles.resultsTitle}>Top 50 Recent Orders</h3>
+            <table className={styles.resultsTable}>
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Order Time</th>
+                  <th>Total ($)</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {queryResults.map((row, idx) => (
+                  <tr key={idx}>
+                    <td>{row.order_id}</td>
+                    <td>{new Date(row.order_time).toLocaleString()}</td>
+                    <td>${parseFloat(row.total || 0).toFixed(2)}</td>
+                    <td>{row.order_status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+
+      case "top-5-menu-items":
+        return (
+          <div className={styles.resultsContainer}>
+            <h3 className={styles.resultsTitle}>
+              Top 5 Most Ordered Menu Items
+            </h3>
+            <table className={styles.resultsTable}>
+              <thead>
+                <tr>
+                  <th>Product ID</th>
+                  <th>Product Name</th>
+                  <th>Order Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                {queryResults.map((row, idx) => (
+                  <tr key={idx}>
+                    <td>{row.product_id}</td>
+                    <td>{row.product_name}</td>
+                    <td>{row.order_count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+
+      case "top-5-ingredients":
+        return (
+          <div className={styles.resultsContainer}>
+            <h3 className={styles.resultsTitle}>Top 5 Most Used Ingredients</h3>
+            <table className={styles.resultsTable}>
+              <thead>
+                <tr>
+                  <th>Product ID</th>
+                  <th>Product Name</th>
+                  <th>Usage Count</th>
+                  <th>Current Stock</th>
+                </tr>
+              </thead>
+              <tbody>
+                {queryResults.map((row, idx) => (
+                  <tr key={idx}>
+                    <td>{row.product_id}</td>
+                    <td>{row.product_name}</td>
+                    <td>{row.usage_count}</td>
+                    <td>{row.stock !== null ? row.stock : "N/A"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className={styles.reportsContainer}>
+      <div className={styles.reportsLayout}>
+        {/* Left Column - Query List */}
+        <div className={styles.queriesColumn}>
+          <h2 className={styles.columnTitle}>Common Queries</h2>
+          <div className={styles.queriesList}>
+            {queries.map((query) => (
+              <button
+                key={query.id}
+                onClick={() => handleQueryClick(query.id)}
+                className={`${styles.queryButton} ${
+                  selectedQuery === query.id ? styles.queryButtonActive : ""
+                }`}
+              >
+                {query.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Middle Column - Results */}
+        <div className={styles.resultsColumn}>{renderQueryResults()}</div>
+
+        {/* Right Column - X-Report Generator */}
+        <div className={styles.xReportColumn}>
+          <h2 className={styles.columnTitle}>X-Report Generator</h2>
+          <div className={styles.xReportForm}>
+            <label className={styles.dateLabel}>
+              Select Date:
+              <input
+                type="date"
+                value={xReportDate}
+                onChange={(e) => setXReportDate(e.target.value)}
+                className={styles.dateInput}
+              />
+            </label>
+            <button
+              onClick={handleXReportGenerate}
+              className={styles.generateButton}
+              disabled={loadingXReport}
+            >
+              {loadingXReport ? "Generating..." : "Generate X-Report"}
+            </button>
+          </div>
+
+          {xReportData && (
+            <div className={styles.xReportResults}>
+              <h3 className={styles.xReportTitle}>
+                X-Report for {new Date(xReportDate).toLocaleDateString()}
+              </h3>
+              <table className={styles.xReportTable}>
+                <thead>
+                  <tr>
+                    <th>Hour</th>
+                    <th>Sales ($)</th>
+                    <th>Returns ($)</th>
+                    <th>Cancelled Orders</th>
+                    <th>Order Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {xReportData.map((row, idx) => (
+                    <tr key={idx}>
+                      <td>{row.hour}</td>
+                      <td>${row.sales}</td>
+                      <td>${row.returns}</td>
+                      <td>{row.cancelledOrders}</td>
+                      <td>{row.orderCount}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom Bar - Same as Manager View */}
+      <div className={styles.bottomBar}>
+        <div className={styles.leftActions}>
+          <AccessibilityMenu />
+          <button
+            onClick={handleLogout}
+            className={styles.logoutIconButton}
+            aria-label="Logout"
+            title="Logout"
+          >
+            <Image src="/logout.svg" alt="Logout" width={28} height={28} />
+          </button>
+          <div className={styles.divider}></div>
+          <div className={styles.managerActions}>
+            <button
+              onClick={() => router.push("/manager")}
+              className={styles.navButton}
+              title="Back to Manager View"
+            >
+              Manager View
+            </button>
+            <button
+              onClick={() => router.push("/manager")}
+              className={`${styles.navButton} ${styles.navButtonActive}`}
+              title="Reports"
+            >
+              Reports
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

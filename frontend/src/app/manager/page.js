@@ -3,15 +3,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { 
-  fetchProducts, 
-  fetchAddOns, 
+import {
+  fetchProducts,
+  fetchAddOns,
   submitOrder,
   fetchUsers,
   createUser,
   updateUser,
   deleteUser,
-  fetchOrders
+  fetchOrders,
 } from "@/lib/api";
 import { logout } from "@/lib/auth";
 import { useRequireAuth } from "@/lib/useAuth";
@@ -30,7 +30,7 @@ const mapCategoryToDisplay = (dbCategory) => {
   return categoryMap[dbCategory] || null;
 };
 
-export default function CashierPage() {
+export default function ManagerPage() {
   const router = useRouter();
   const [products, setProducts] = useState([]);
   const [addOns, setAddOns] = useState([]);
@@ -103,7 +103,7 @@ export default function CashierPage() {
         setLoadingTransactions(true);
       }
       setTransactionsError(null);
-      
+
       // Fetch only the 20 most recent orders directly from the API
       const ordersData = await fetchOrders(20);
       setTransactions(ordersData);
@@ -223,7 +223,7 @@ export default function CashierPage() {
       setOrderSubtotal(total);
       setShowSuccessModal(true);
       clearCart();
-      
+
       // Refresh transactions after successful order
       loadTransactions();
     } catch (error) {
@@ -303,7 +303,10 @@ export default function CashierPage() {
     }
     // Fallback to calculating from items if available
     if (transaction.items && Array.isArray(transaction.items)) {
-      return transaction.items.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
+      return transaction.items.reduce(
+        (sum, item) => sum + (parseFloat(item.price) || 0),
+        0
+      );
     }
     return 0;
   };
@@ -334,29 +337,41 @@ export default function CashierPage() {
             {loadingTransactions ? (
               <div className={styles.loadingTransactions}>Loading...</div>
             ) : transactionsError ? (
-              <div className={styles.transactionsError}>{transactionsError}</div>
+              <div className={styles.transactionsError}>
+                {transactionsError}
+              </div>
             ) : transactions.length === 0 ? (
-              <div className={styles.emptyTransactions}>No transactions yet</div>
+              <div className={styles.emptyTransactions}>
+                No transactions yet
+              </div>
             ) : (
               transactions.map((transaction) => (
-                <div key={transaction.order_id} className={styles.transactionItem}>
+                <div
+                  key={transaction.order_id}
+                  className={styles.transactionItem}
+                >
                   <div className={styles.transactionHeader}>
-                    <div className={styles.transactionId}>Order #{transaction.order_id}</div>
+                    <div className={styles.transactionId}>
+                      Order #{transaction.order_id}
+                    </div>
                     <div className={styles.transactionDate}>
                       {formatTransactionDate(transaction.order_time)}
                     </div>
                   </div>
                   <div className={styles.transactionDetails}>
                     <div className={styles.transactionStatus}>
-                      Status: <span className={styles.statusBadge}>{transaction.order_status || "complete"}</span>
+                      Status:{" "}
+                      <span className={styles.statusBadge}>
+                        {transaction.order_status || "complete"}
+                      </span>
                     </div>
                     <div className={styles.transactionTotal}>
                       ${calculateTransactionTotal(transaction).toFixed(2)}
                     </div>
                   </div>
                 </div>
-              )))
-            }
+              ))
+            )}
           </div>
         </div>
 
@@ -484,37 +499,32 @@ export default function CashierPage() {
       <div className={styles.bottomBar}>
         <div className={styles.leftActions}>
           <AccessibilityMenu />
-          <button 
-            onClick={handleLogout} 
+          <button
+            onClick={handleLogout}
             className={styles.logoutIconButton}
             aria-label="Logout"
             title="Logout"
           >
-            <Image
-              src="/logout.svg"
-              alt="Logout"
-              width={28}
-              height={28}
-            />
+            <Image src="/logout.svg" alt="Logout" width={28} height={28} />
           </button>
           <div className={styles.divider}></div>
           <div className={styles.managerActions}>
-            <button 
-              onClick={handleUserTableClick} 
+            <button
+              onClick={handleUserTableClick}
               className={styles.userTableButton}
               title="Manage Users"
             >
               Users Table
             </button>
-            <button 
-              onClick={handleInventoryTableClick} 
+            <button
+              onClick={handleInventoryTableClick}
               className={styles.inventoryTableButton}
               title="Manage Inventory"
             >
               Inventory Table
             </button>
-            <button 
-              onClick={() => {/* TODO: Implement reports */}} 
+            <button
+              onClick={() => router.push("/manager/reports")}
               className={styles.reportsButton}
               title="View Reports"
             >
@@ -530,12 +540,7 @@ export default function CashierPage() {
             aria-label="Clear Cart"
             title="Clear Cart"
           >
-            <Image
-              src="/delete.svg"
-              alt="Clear Cart"
-              width={28}
-              height={28}
-            />
+            <Image src="/delete.svg" alt="Clear Cart" width={28} height={28} />
           </button>
           <button
             onClick={handleCheckout}
@@ -820,11 +825,15 @@ function UserTableModal({ users, loading, onClose, onRefresh }) {
                           index % 2 === 0 ? "#ffffff" : "#fafafa",
                       }}
                     >
-                      <td style={{ padding: "12px", color: "#1a1a1a" }}>{user.user_id}</td>
+                      <td style={{ padding: "12px", color: "#1a1a1a" }}>
+                        {user.user_id}
+                      </td>
                       <td style={{ padding: "12px", color: "#1a1a1a" }}>
                         {user.user_name || "N/A"}
                       </td>
-                      <td style={{ padding: "12px", color: "#1a1a1a" }}>{user.email}</td>
+                      <td style={{ padding: "12px", color: "#1a1a1a" }}>
+                        {user.email}
+                      </td>
                       <td style={{ padding: "12px" }}>
                         <span
                           style={{
@@ -986,9 +995,12 @@ function InventoryTableModal({ products, loading, onClose, onRefresh }) {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/products/${productId}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -1007,13 +1019,13 @@ function InventoryTableModal({ products, loading, onClose, onRefresh }) {
       <div
         className={styles.modalContent}
         onClick={(e) => e.stopPropagation()}
-        style={{ 
-          maxWidth: "1000px", 
-          width: "90%", 
+        style={{
+          maxWidth: "1000px",
+          width: "90%",
           height: "80vh",
           display: "flex",
           flexDirection: "column",
-          overflow: "hidden"
+          overflow: "hidden",
         }}
       >
         <div className={styles.modalHeader}>
@@ -1023,14 +1035,14 @@ function InventoryTableModal({ products, loading, onClose, onRefresh }) {
           </button>
         </div>
 
-        <div 
-          className={styles.modalBody} 
-          style={{ 
+        <div
+          className={styles.modalBody}
+          style={{
             padding: "20px",
             flex: 1,
             overflow: "auto",
             display: "flex",
-            flexDirection: "column"
+            flexDirection: "column",
           }}
         >
           {/* Add Product Button and Search Bar */}
@@ -1040,7 +1052,7 @@ function InventoryTableModal({ products, loading, onClose, onRefresh }) {
               gap: "12px",
               marginBottom: "16px",
               alignItems: "center",
-              flexShrink: 0
+              flexShrink: 0,
             }}
           >
             <button
@@ -1089,15 +1101,21 @@ function InventoryTableModal({ products, loading, onClose, onRefresh }) {
           </div>
 
           {loading ? (
-            <div style={{ textAlign: "center", padding: "40px", flexShrink: 0 }}>
+            <div
+              style={{ textAlign: "center", padding: "40px", flexShrink: 0 }}
+            >
               Loading products...
             </div>
           ) : products.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px", flexShrink: 0 }}>
+            <div
+              style={{ textAlign: "center", padding: "40px", flexShrink: 0 }}
+            >
               No products found
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px", flexShrink: 0 }}>
+            <div
+              style={{ textAlign: "center", padding: "40px", flexShrink: 0 }}
+            >
               No products match your search
             </div>
           ) : (
@@ -1106,7 +1124,7 @@ function InventoryTableModal({ products, loading, onClose, onRefresh }) {
                 flex: 1,
                 overflow: "auto",
                 border: "1px solid #e5e5e5",
-                borderRadius: "8px"
+                borderRadius: "8px",
               }}
             >
               <table
@@ -1116,7 +1134,14 @@ function InventoryTableModal({ products, loading, onClose, onRefresh }) {
                   fontSize: "14px",
                 }}
               >
-                <thead style={{ position: "sticky", top: 0, backgroundColor: "#ffffff", zIndex: 1 }}>
+                <thead
+                  style={{
+                    position: "sticky",
+                    top: 0,
+                    backgroundColor: "#ffffff",
+                    zIndex: 1,
+                  }}
+                >
                   <tr style={{ borderBottom: "2px solid #e5e5e5" }}>
                     <th
                       style={{
@@ -1227,10 +1252,22 @@ function InventoryTableModal({ products, loading, onClose, onRefresh }) {
                           {product.category || "N/A"}
                         </span>
                       </td>
-                      <td style={{ padding: "12px", textAlign: "right", color: "#1a1a1a" }}>
+                      <td
+                        style={{
+                          padding: "12px",
+                          textAlign: "right",
+                          color: "#1a1a1a",
+                        }}
+                      >
                         ${parseFloat(product.price).toFixed(2)}
                       </td>
-                      <td style={{ padding: "12px", textAlign: "right", color: "#1a1a1a" }}>
+                      <td
+                        style={{
+                          padding: "12px",
+                          textAlign: "right",
+                          color: "#1a1a1a",
+                        }}
+                      >
                         <span
                           style={{
                             color: product.stock < 10 ? "#ef4444" : "#10b981",
@@ -1350,13 +1387,13 @@ function ProductFormModal({ mode, product = null, onClose, onSuccess }) {
   const [error, setError] = useState("");
 
   const categories = [
-    "Milk Drink", 
-    "Fruit Drink", 
-    "Seasonal", 
-    "Side", 
-    "Add-on", 
-    "Supply", 
-    "Merchandise"
+    "Milk Drink",
+    "Fruit Drink",
+    "Seasonal",
+    "Side",
+    "Add-on",
+    "Supply",
+    "Merchandise",
   ];
 
   const handleSubmit = async (e) => {
@@ -1365,10 +1402,11 @@ function ProductFormModal({ mode, product = null, onClose, onSuccess }) {
     setLoading(true);
 
     try {
-      const url = mode === "add" 
-        ? `${process.env.NEXT_PUBLIC_API_URL}/products`
-        : `${process.env.NEXT_PUBLIC_API_URL}/products/${product.product_id}`;
-      
+      const url =
+        mode === "add"
+          ? `${process.env.NEXT_PUBLIC_API_URL}/products`
+          : `${process.env.NEXT_PUBLIC_API_URL}/products/${product.product_id}`;
+
       const method = mode === "add" ? "POST" : "PUT";
 
       const response = await fetch(url, {
@@ -1388,7 +1426,11 @@ function ProductFormModal({ mode, product = null, onClose, onSuccess }) {
         throw new Error(errorData.message || "Operation failed");
       }
 
-      alert(mode === "add" ? "Product created successfully!" : "Product updated successfully!");
+      alert(
+        mode === "add"
+          ? "Product created successfully!"
+          : "Product updated successfully!"
+      );
       onSuccess();
     } catch (err) {
       setError(err.message || "Operation failed");

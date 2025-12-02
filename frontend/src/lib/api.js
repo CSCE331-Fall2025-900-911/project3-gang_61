@@ -1,16 +1,16 @@
 const rawApiUrl = process.env.NEXT_PUBLIC_API_URL;
-const API_BASE_URL = rawApiUrl.replace(/\/+$/, '');
+const API_BASE_URL = rawApiUrl.replace(/\/+$/, "");
 
 // Helper function to build API URLs safely
 const buildApiUrl = (path) => {
   // Remove leading slash from path if present, then add it back
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
   return `${API_BASE_URL}${cleanPath}`;
 };
 
 // Debug logging (remove in production if needed)
-if (typeof window !== 'undefined') {
-  console.log('API_BASE_URL:', API_BASE_URL);
+if (typeof window !== "undefined") {
+  console.log("API_BASE_URL:", API_BASE_URL);
 }
 
 /**
@@ -19,7 +19,7 @@ if (typeof window !== 'undefined') {
  * @throws {Error} If the request fails
  */
 export async function fetchProducts() {
-  const response = await fetch(buildApiUrl('/products'), {
+  const response = await fetch(buildApiUrl("/products"), {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -44,25 +44,25 @@ export async function fetchProducts() {
  * @throws {Error} If the request fails
  */
 export async function fetchAddOns() {
-  const response = await fetch(buildApiUrl('/products'), {
+  const response = await fetch(buildApiUrl("/products"), {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
   });
-  
+
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(
       `Failed to fetch add-ons: ${response.status} ${response.statusText} - ${errorText}`
     );
   }
-  
+
   const products = await response.json();
-  
+
   // Filter only products with category "Add-on"
-  return Array.isArray(products) 
-    ? products.filter(product => product.category === "Add-on")
+  return Array.isArray(products)
+    ? products.filter((product) => product.category === "Add-on")
     : [];
 }
 
@@ -95,7 +95,7 @@ export async function submitOrder(orderData) {
       orderData.employee_id !== undefined ? parseInt(orderData.employee_id) : 0,
   };
 
-  const response = await fetch(buildApiUrl('/orders'), {
+  const response = await fetch(buildApiUrl("/orders"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -215,24 +215,25 @@ export async function deleteUser(userId) {
  * @throws {Error} If the request fails
  */
 export async function fetchOrders(limit = null, includeItems = false) {
-  const authToken = typeof window !== 'undefined' ? sessionStorage.getItem("authToken") : null;
-  
+  const authToken =
+    typeof window !== "undefined" ? sessionStorage.getItem("authToken") : null;
+
   const headers = {
     "Content-Type": "application/json",
   };
-  
+
   if (authToken) {
     headers["Authorization"] = `Bearer ${authToken}`;
   }
 
   // Build URL with query parameters
-  let url = buildApiUrl('/orders');
+  let url = buildApiUrl("/orders");
   const params = new URLSearchParams();
   if (limit && limit > 0) {
-    params.append('limit', limit.toString());
+    params.append("limit", limit.toString());
   }
   if (!includeItems) {
-    params.append('includeItems', 'false');
+    params.append("includeItems", "false");
   }
   if (params.toString()) {
     url += `?${params.toString()}`;
@@ -261,7 +262,7 @@ export async function fetchOrders(limit = null, includeItems = false) {
  * @throws {Error} If the request fails
  */
 export async function authenticateWithGoogle(credential) {
-  const response = await fetch(buildApiUrl('/auth/google'), {
+  const response = await fetch(buildApiUrl("/auth/google"), {
     //go to auth.js and see post route for google
     method: "POST",
     headers: {
@@ -312,7 +313,7 @@ export async function authenticateWithGitHub(code) {
 
 // Create a new product
 export async function createProduct(productData) {
-  const response = await fetch(buildApiUrl('/products'), {
+  const response = await fetch(buildApiUrl("/products"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -355,6 +356,187 @@ export async function deleteProduct(productId) {
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || "Failed to delete product");
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch daily sales report
+ * @returns {Promise<Array>} Array of daily sales data
+ */
+export async function fetchDailySales() {
+  const response = await fetch(buildApiUrl("/reports/daily-sales"), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to fetch daily sales");
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch lowest stock items
+ * @returns {Promise<Array>} Array of products with low stock
+ */
+export async function fetchLowestStock() {
+  const response = await fetch(buildApiUrl("/reports/lowest-stock"), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to fetch lowest stock");
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch peak sales report
+ * @returns {Promise<Array>} Array of peak sales data
+ */
+export async function fetchPeakSales() {
+  const response = await fetch(buildApiUrl("/reports/peak-sales"), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to fetch peak sales");
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch sales history (grouped by hour)
+ * @returns {Promise<Array>} Array of hourly sales data
+ */
+export async function fetchSalesHistory() {
+  const response = await fetch(buildApiUrl("/reports/sales-history"), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to fetch sales history");
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch weekly sales report
+ * @returns {Promise<Array>} Array of weekly sales data
+ */
+export async function fetchWeeklySales() {
+  const response = await fetch(buildApiUrl("/reports/weekly-sales"), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to fetch weekly sales");
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch top 50 recent orders
+ * @returns {Promise<Array>} Array of recent orders
+ */
+export async function fetchTop50Orders() {
+  const response = await fetch(buildApiUrl("/reports/top-50-orders"), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to fetch top 50 orders");
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch top 5 most ordered menu items
+ * @returns {Promise<Array>} Array of top menu items
+ */
+export async function fetchTop5MenuItems() {
+  const response = await fetch(buildApiUrl("/reports/top-5-menu-items"), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to fetch top 5 menu items");
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch top 5 most used ingredients
+ * @returns {Promise<Array>} Array of top ingredients
+ */
+export async function fetchTop5Ingredients() {
+  const response = await fetch(buildApiUrl("/reports/top-5-ingredients"), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to fetch top 5 ingredients");
+  }
+
+  return response.json();
+}
+
+/**
+ * Generate X-Report for a specific date
+ * @param {string} date - Date in YYYY-MM-DD format
+ * @returns {Promise<Array>} Array of hourly report data
+ */
+export async function generateXReport(date) {
+  const response = await fetch(buildApiUrl(`/reports/x-report?date=${date}`), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to generate X-Report");
   }
 
   return response.json();
