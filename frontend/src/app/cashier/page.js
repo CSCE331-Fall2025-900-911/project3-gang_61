@@ -58,24 +58,25 @@ export default function CashierPage() {
   };
 
   // Load products and add-ons from backend
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const [productsData, addOnsData] = await Promise.all([
-          fetchProducts(),
-          fetchAddOns(),
-        ]);
-        setProducts(productsData);
-        setAddOns(addOnsData);
-        setError(null);
-      } catch (err) {
-        setError("Failed to load products. Please try again later.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [productsData, addOnsData] = await Promise.all([
+        fetchProducts(),
+        fetchAddOns(),
+      ]);
+      setProducts(productsData);
+      setAddOns(addOnsData);
+      setError(null);
+    } catch (err) {
+      setError("Failed to load products. Please try again later.");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadData();
   }, []);
 
@@ -178,6 +179,9 @@ export default function CashierPage() {
       setOrderSubtotal(total);
       setShowSuccessModal(true);
       clearCart();
+
+      // Refresh products to update stock
+      await loadData();
     } catch (error) {
       const errorMessage =
         error.message || "Failed to place order. Please try again.";
@@ -340,12 +344,7 @@ export default function CashierPage() {
             aria-label="Logout"
             title="Logout"
           >
-            <Image
-              src="/logout.svg"
-              alt="Logout"
-              width={28}
-              height={28}
-            />
+            <Image src="/logout.svg" alt="Logout" width={28} height={28} />
           </button>
         </div>
         <div className={styles.cartActions}>
@@ -356,12 +355,7 @@ export default function CashierPage() {
             aria-label="Clear Cart"
             title="Clear Cart"
           >
-            <Image
-              src="/delete.svg"
-              alt="Clear Cart"
-              width={28}
-              height={28}
-            />
+            <Image src="/delete.svg" alt="Clear Cart" width={28} height={28} />
           </button>
           <button
             onClick={handleCheckout}

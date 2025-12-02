@@ -37,7 +37,9 @@ const getCategoryImage = (category) => {
 // derive product image path (prefers product.image_url, else product_id.png)
 const getProductImageSrc = (product) => {
   if (product?.image_url) {
-    return product.image_url.startsWith("/") ? product.image_url : `/products/${product.image_url}`;
+    return product.image_url.startsWith("/")
+      ? product.image_url
+      : `/products/${product.image_url}`;
   }
   return `/products/${product.product_id}.png`;
 };
@@ -119,24 +121,25 @@ export default function KioskPage() {
   };
 
   // Load products and add-ons from backend
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const [productsData, addOnsData] = await Promise.all([
-          fetchProducts(),
-          fetchAddOns(),
-        ]);
-        setProducts(productsData);
-        setAddOns(addOnsData);
-        setError(null);
-      } catch (err) {
-        setError("Failed to load products. Please try again later.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [productsData, addOnsData] = await Promise.all([
+        fetchProducts(),
+        fetchAddOns(),
+      ]);
+      setProducts(productsData);
+      setAddOns(addOnsData);
+      setError(null);
+    } catch (err) {
+      setError("Failed to load products. Please try again later.");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadData();
   }, []);
 
@@ -252,6 +255,9 @@ export default function KioskPage() {
       setOrderSubtotal(total);
       setShowSuccessModal(true);
       clearCart();
+
+      // Refresh products to update stock
+      await loadData();
     } catch (error) {
       const errorMessage =
         error.message || "Failed to place order. Please try again.";
@@ -309,7 +315,7 @@ export default function KioskPage() {
                           alt={category}
                           fill
                           className={styles.categoryImage}
-                          style={{ objectFit: 'contain' }}
+                          style={{ objectFit: "contain" }}
                           unoptimized
                         />
                       </div>
@@ -336,19 +342,24 @@ export default function KioskPage() {
                     src={getProductImageSrc(product)}
                     alt={product.product_name}
                     loading="lazy"
-                    style={{ width: "100%", height: "120px", objectFit: "contain", borderRadius: 6 }}
+                    style={{
+                      width: "100%",
+                      height: "120px",
+                      objectFit: "contain",
+                      borderRadius: 6,
+                    }}
                   />
                 </div>
-                 <div className={styles.productName}>{product.product_name}</div>
-                 <div className={styles.productPrice}>
-                   ${parseFloat(product.price).toFixed(2)}
-                 </div>
-                 {product.stock !== undefined && (
-                   <div className={styles.productStock}>
-                     Stock: {product.stock}
-                   </div>
-                 )}
-               </div>
+                <div className={styles.productName}>{product.product_name}</div>
+                <div className={styles.productPrice}>
+                  ${parseFloat(product.price).toFixed(2)}
+                </div>
+                {product.stock !== undefined && (
+                  <div className={styles.productStock}>
+                    Stock: {product.stock}
+                  </div>
+                )}
+              </div>
             ))}
             {(!categorizedProducts[selectedCategory] ||
               categorizedProducts[selectedCategory].length === 0) && (
@@ -465,12 +476,7 @@ export default function KioskPage() {
             aria-label="Clear Cart"
             title="Clear Cart"
           >
-            <Image
-              src="/delete.svg"
-              alt="Clear Cart"
-              width={28}
-              height={28}
-            />
+            <Image src="/delete.svg" alt="Clear Cart" width={28} height={28} />
           </button>
           <button
             onClick={handleCheckout}
@@ -554,7 +560,7 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
               {product.description}
             </div>
           )}
-          
+
           {/* Ice Level Selection */}
           <div className={styles.modificationSection}>
             <h3 className={styles.modificationTitle}>Ice Level</h3>
@@ -607,7 +613,9 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
                         isSelected ? styles.addOnButtonActive : ""
                       }`}
                     >
-                      <div className={styles.addOnName}>{addOn.product_name}</div>
+                      <div className={styles.addOnName}>
+                        {addOn.product_name}
+                      </div>
                       <div className={styles.addOnPrice}>
                         +${parseFloat(addOn.price).toFixed(2)}
                       </div>

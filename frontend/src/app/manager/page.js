@@ -75,24 +75,25 @@ export default function ManagerPage() {
   };
 
   // Load products and add-ons from backend
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const [productsData, addOnsData] = await Promise.all([
-          fetchProducts(),
-          fetchAddOns(),
-        ]);
-        setProducts(productsData);
-        setAddOns(addOnsData);
-        setError(null);
-      } catch (err) {
-        setError("Failed to load products. Please try again later.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [productsData, addOnsData] = await Promise.all([
+        fetchProducts(),
+        fetchAddOns(),
+      ]);
+      setProducts(productsData);
+      setAddOns(addOnsData);
+      setError(null);
+    } catch (err) {
+      setError("Failed to load products. Please try again later.");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadData();
   }, []);
 
@@ -224,8 +225,9 @@ export default function ManagerPage() {
       setShowSuccessModal(true);
       clearCart();
 
-      // Refresh transactions after successful order
+      // Refresh transactions and products to update stock
       loadTransactions();
+      await loadData();
     } catch (error) {
       const errorMessage =
         error.message || "Failed to place order. Please try again.";
