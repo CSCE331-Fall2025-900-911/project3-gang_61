@@ -62,7 +62,6 @@ export default function AccessibilityMenu() {
     if (savedLanguageTranslation) {
       setLanguageTranslation(true);
       setSelectedLanguage(savedLanguage);
-      // Load the translation after the component mounts
       setTimeout(() => applyTranslation(savedLanguage, 15), 500);
     }
 
@@ -83,19 +82,6 @@ export default function AccessibilityMenu() {
     }
   };
 
-  // Function to apply large text mode
-  const applyLargeText = (enabled) => {
-    if (enabled) {
-      document.body.classList.add('large-text-mode');
-      document.documentElement.style.setProperty('--base-font-size', '1.25rem');
-      document.documentElement.style.setProperty('--icon-scale', '1.25');
-    } else {
-      document.body.classList.remove('large-text-mode');
-      document.documentElement.style.setProperty('--base-font-size', '1rem');
-      document.documentElement.style.setProperty('--icon-scale', '1');
-    }
-  };
-
   // Function to apply translation with retry logic
   const applyTranslation = (language, retries = 15) => {
     const select = document.querySelector(".goog-te-combo");
@@ -103,22 +89,27 @@ export default function AccessibilityMenu() {
       select.value = language;
       select.dispatchEvent(new Event("change"));
     } else if (retries > 0) {
-      // Retry after 200ms if the widget hasn't loaded yet
       setTimeout(() => applyTranslation(language, retries - 1), 200);
+    }
+  };
+
+  // Function to apply large text mode
+  const applyLargeText = (enabled) => {
+    if (enabled) {
+      document.body.classList.add('large-text-mode');
+    } else {
+      document.body.classList.remove('large-text-mode');
     }
   };
 
   // Handle save button click
   const handleSave = () => {
-    // Apply high contrast
     applyHighContrast(highContrast);
     localStorage.setItem("highContrast", highContrast.toString());
 
-    // Apply large text
     applyLargeText(largeText);
     localStorage.setItem("largeText", largeText.toString());
 
-    // Apply translation if enabled
     if (languageTranslation) {
       localStorage.setItem("languageTranslation", "true");
       localStorage.setItem("selectedLanguage", selectedLanguage);
@@ -126,7 +117,6 @@ export default function AccessibilityMenu() {
     } else {
       localStorage.setItem("languageTranslation", "false");
       localStorage.removeItem("selectedLanguage");
-      // Reset to English if translation is disabled
       const select = document.querySelector(".goog-te-combo");
       if (select) {
         select.value = "en";
@@ -141,23 +131,20 @@ export default function AccessibilityMenu() {
   useEffect(() => {
     if (typeof window === "undefined" || !languageTranslation) return;
 
-    // Check if script already exists
     if (translateScriptLoaded.current || document.getElementById("google-translate-script")) {
       return;
     }
 
     translateScriptLoaded.current = true;
 
-    // Create the div for Google Translate
     let translateDiv = document.getElementById("google_translate_element");
     if (!translateDiv) {
       translateDiv = document.createElement("div");
       translateDiv.id = "google_translate_element";
-      translateDiv.style.display = "none"; // Hide the widget
+      translateDiv.style.display = "none";
       document.body.appendChild(translateDiv);
     }
 
-    // Initialize function
     window.googleTranslateElementInit = () => {
       if (window.google && window.google.translate) {
         new window.google.translate.TranslateElement(
@@ -170,7 +157,6 @@ export default function AccessibilityMenu() {
       }
     };
 
-    // Add the Google Translate script
     const script = document.createElement("script");
     script.id = "google-translate-script";
     script.type = "text/javascript";
@@ -250,21 +236,19 @@ export default function AccessibilityMenu() {
             </label>
 
             {languageTranslation && (
-              <>
-                <div className={styles.languageDropdown}>
-                  <select
-                    value={selectedLanguage}
-                    onChange={(e) => setSelectedLanguage(e.target.value)}
-                    className={styles.languageSelect}
-                  >
-                    {languages.map((lang) => (
-                      <option key={lang.code} value={lang.code}>
-                        {lang.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
+              <div className={styles.languageDropdown}>
+                <select
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                  className={styles.languageSelect}
+                >
+                  {languages.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
           </div>
 

@@ -2,8 +2,6 @@
   --background: #ffffff;
   --foreground: #171717;
   --contrast-filter: none;
-  --base-font-size: 1rem;
-  --icon-scale: 1;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -26,7 +24,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   filter: var(--contrast-filter, none);
-  font-size: var(--base-font-size);
 }
 
 * {
@@ -137,98 +134,200 @@ body.high-contrast-mode th {
 
 /* Large text mode */
 body.large-text-mode {
-  font-size: 1.25rem;
-}
-
-body.large-text-mode h1 {
-  font-size: 2.5rem;
-}
-
-body.large-text-mode h2 {
-  font-size: 2rem;
-}
-
-body.large-text-mode h3 {
-  font-size: 1.75rem;
-}
-
-body.large-text-mode h4 {
   font-size: 1.5rem;
 }
 
-body.large-text-mode h5 {
-  font-size: 1.25rem;
+body.large-text-mode h1 {
+  font-size: 3rem !important;
 }
 
+body.large-text-mode h2 {
+  font-size: 2.5rem !important;
+}
+
+body.large-text-mode h3 {
+  font-size: 2rem !important;
+}
+
+body.large-text-mode h4 {
+  font-size: 1.75rem !important;
+}
+
+body.large-text-mode h5,
+body.large-text-mode h6 {
+  font-size: 1.5rem !important;
+}
+
+/* Apply to all buttons and inputs regardless of nesting */
 body.large-text-mode button,
 body.large-text-mode input,
 body.large-text-mode select,
-body.large-text-mode textarea {
-  font-size: 1.1rem;
-  padding: 0.75rem 1.25rem;
-}
-
-body.large-text-mode img,
-body.large-text-mode svg {
-  transform: scale(1.25);
-  transform-origin: center;
-}
-
-/* Kiosk view specific - drink containers */
-body.large-text-mode [class*="drinkOption"],
-body.large-text-mode [class*="drink-option"],
-body.large-text-mode [class*="drinkContainer"],
-body.large-text-mode [class*="drink-container"],
-body.large-text-mode [class*="menuItem"],
-body.large-text-mode [class*="menu-item"] {
-  transform: scale(1.2);
-  transform-origin: center;
-  margin: 1rem;
-}
-
-/* Kiosk view - drink names and text */
-body.large-text-mode [class*="drinkName"],
-body.large-text-mode [class*="drink-name"],
-body.large-text-mode [class*="drinkTitle"],
-body.large-text-mode [class*="drink-title"],
-body.large-text-mode [class*="itemName"],
-body.large-text-mode [class*="item-name"] {
+body.large-text-mode textarea,
+body.large-text-mode a,
+body.large-text-mode * button,
+body.large-text-mode * input,
+body.large-text-mode * select,
+body.large-text-mode * textarea,
+body.large-text-mode * a {
   font-size: 1.5rem !important;
-  line-height: 1.4;
+  padding: 0.75rem 1.5rem !important;
+  min-height: 48px !important;
 }
 
-/* Kiosk view - drink prices and details */
-body.large-text-mode [class*="drinkPrice"],
-body.large-text-mode [class*="drink-price"],
-body.large-text-mode [class*="price"],
-body.large-text-mode [class*="itemPrice"],
-body.large-text-mode [class*="item-price"] {
-  font-size: 1.3rem !important;
+body.large-text-mode label,
+body.large-text-mode * label {
+  font-size: 1.5rem !important;
 }
 
-/* Kiosk view - drink descriptions */
-body.large-text-mode [class*="drinkDescription"],
-body.large-text-mode [class*="drink-description"],
-body.large-text-mode [class*="description"],
-body.large-text-mode [class*="itemDescription"],
-body.large-text-mode [class*="item-description"] {
-  font-size: 1.15rem !important;
-  line-height: 1.5;
+/* Apply to all text elements including nested ones */
+body.large-text-mode p,
+body.large-text-mode span,
+body.large-text-mode li,
+body.large-text-mode td,
+body.large-text-mode th,
+body.large-text-mode div,
+body.large-text-mode * p,
+body.large-text-mode * span,
+body.large-text-mode * li,
+body.large-text-mode * td,
+body.large-text-mode * th,
+body.large-text-mode * div {
+  font-size: 1.5rem !important;
+  line-height: 1.6 !important;
 }
 
-/* Kiosk view - drink images */
-body.large-text-mode [class*="drinkImage"],
-body.large-text-mode [class*="drink-image"],
-body.large-text-mode [class*="itemImage"],
-body.large-text-mode [class*="item-image"] {
-  transform: scale(1.3);
-  transform-origin: center;
+/* Catch all remaining text elements */
+body.large-text-mode *:not(script):not(style) {
+  font-size: inherit !important;
 }
 
-/* Adjust grid/flex layouts to accommodate larger items */
-body.large-text-mode [class*="drinkGrid"],
-body.large-text-mode [class*="drink-grid"],
-body.large-text-mode [class*="menuGrid"],
-body.large-text-mode [class*="menu-grid"] {
-  gap: 2rem;
+/* IMPORTANT: Keep specific icons at normal size - HIGHEST PRIORITY */
+body.large-text-mode [class*="accessibility"] img,
+body.large-text-mode * [class*="accessibility"] img,
+body.large-text-mode [class*="accessibility"] svg,
+body.large-text-mode * [class*="accessibility"] svg,
+body.large-text-mode [class*="logout"] img,
+body.large-text-mode * [class*="logout"] img,
+body.large-text-mode [class*="logout"] svg,
+body.large-text-mode * [class*="logout"] svg,
+body.large-text-mode [class*="trash"] img,
+body.large-text-mode * [class*="trash"] img,
+body.large-text-mode [class*="trash"] svg,
+body.large-text-mode * [class*="trash"] svg,
+body.large-text-mode [class*="nav"] [class*="logout"] img,
+body.large-text-mode [class*="nav"] [class*="trash"] img,
+body.large-text-mode [class*="nav"] button img,
+body.large-text-mode [class*="bottom"] [class*="logout"] img,
+body.large-text-mode [class*="bottom"] [class*="trash"] img,
+body.large-text-mode [class*="bottom"] button img,
+body.large-text-mode img[alt*="Logout"],
+body.large-text-mode * img[alt*="Logout"],
+body.large-text-mode img[alt*="Delete"],
+body.large-text-mode * img[alt*="Delete"],
+body.large-text-mode img[alt*="Trash"],
+body.large-text-mode * img[alt*="Trash"],
+body.large-text-mode img[alt*="accessibility"],
+body.large-text-mode * img[alt*="accessibility"],
+body.large-text-mode img[src*="accessibility"],
+body.large-text-mode * img[src*="accessibility"],
+body.large-text-mode img[src*="logout"],
+body.large-text-mode * img[src*="logout"],
+body.large-text-mode img[src*="trash"],
+body.large-text-mode * img[src*="trash"],
+body.large-text-mode svg[class*="accessibility"],
+body.large-text-mode * svg[class*="accessibility"],
+body.large-text-mode svg[class*="logout"],
+body.large-text-mode * svg[class*="logout"],
+body.large-text-mode svg[class*="trash"],
+body.large-text-mode * svg[class*="trash"] {
+  display: block !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  width: 36px !important;
+  height: 36px !important;
+  transform: none !important;
+  object-fit: contain !important;
+  flex-shrink: 0 !important;
+}
+
+/* Scale icons and images moderately - general rules */
+body.large-text-mode img,
+body.large-text-mode svg,
+body.large-text-mode * img,
+body.large-text-mode * svg {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* Allow category icons to scale naturally with their containers */
+body.large-text-mode [class*="category"] img,
+body.large-text-mode [class*="category"] svg,
+body.large-text-mode [class*="label"] img,
+body.large-text-mode [class*="label"] svg,
+body.large-text-mode button img,
+body.large-text-mode button svg {
+  max-width: 100% !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
+/* Make drink images smaller */
+body.large-text-mode [class*="drink"] img,
+body.large-text-mode [class*="menu"] img,
+body.large-text-mode [class*="product"] img,
+body.large-text-mode [class*="item"] img {
+  max-width: 120px !important;
+  max-height: 120px !important;
+  width: auto !important;
+  height: auto !important;
+  transform: none !important;
+  object-fit: contain !important;
+}
+
+/* RE-APPLY: Force specific icons to stay at 36px - this overrides everything above */
+body.large-text-mode [class*="accessibility"] img,
+body.large-text-mode [class*="accessibility"] svg,
+body.large-text-mode [class*="logout"] img,
+body.large-text-mode [class*="logout"] svg,
+body.large-text-mode [class*="trash"] img,
+body.large-text-mode [class*="trash"] svg,
+body.large-text-mode [class*="nav"] [class*="logout"] img,
+body.large-text-mode [class*="nav"] [class*="trash"] img,
+body.large-text-mode [class*="bottom"] [class*="logout"] img,
+body.large-text-mode [class*="bottom"] [class*="trash"] img,
+body.large-text-mode img[alt*="Logout"],
+body.large-text-mode img[alt*="Delete"],
+body.large-text-mode img[alt*="Trash"],
+body.large-text-mode img[src*="logout"],
+body.large-text-mode img[src*="trash"] {
+  max-width: 36px !important;
+  max-height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  width: 36px !important;
+  height: 36px !important;
+}
+
+/* Maintain high contrast borders in large text mode */
+body.high-contrast-mode.large-text-mode button,
+body.high-contrast-mode.large-text-mode a,
+body.high-contrast-mode.large-text-mode input,
+body.high-contrast-mode.large-text-mode select,
+body.high-contrast-mode.large-text-mode textarea {
+  border: 2px solid #000000 !important;
+}
+
+/* Ensure Google Translate remains hidden in large text mode */
+body.large-text-mode #google_translate_element,
+body.large-text-mode .goog-te-banner-frame,
+body.large-text-mode .goog-te-menu-frame {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Maintain layout structure */
+body.large-text-mode {
+  overflow-x: hidden;
 }
