@@ -34,6 +34,9 @@ const getCategoryImage = (category) => {
   return basePath ? `${basePath}?v=${Date.now()}` : null;
 };
 
+// Placeholder image path for products without images
+const PLACEHOLDER_IMAGE = "/products/placeholder.png";
+
 // derive product image path (prefers product.image_url, else product_id.png)
 const getProductImageSrc = (product) => {
   if (product?.image_url) {
@@ -354,6 +357,12 @@ export default function KioskPage() {
                       src={getProductImageSrc(product)}
                       alt={product.product_name}
                       loading="lazy"
+                      onError={(e) => {
+                        // Fallback to placeholder if image fails to load
+                        if (e.target.src !== PLACEHOLDER_IMAGE) {
+                          e.target.src = PLACEHOLDER_IMAGE;
+                        }
+                      }}
                       style={{
                         width: "100%",
                         height: "120px",
