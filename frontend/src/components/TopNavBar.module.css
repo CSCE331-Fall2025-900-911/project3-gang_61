@@ -1,0 +1,212 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #ffffff;
+  border-bottom: 2px solid #e5e5e5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+  font-family: inherit;
+}
+
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.timeDate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.time {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  font-family: monospace;
+}
+
+.date {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.weather {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.weatherInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.location {
+  font-size: 0.7rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.temperature {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.condition {
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: capitalize;
+}
+
+.weatherError,
+.weatherLoading {
+  font-size: 0.875rem;
+  color: #666;
+  font-style: italic;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .navbar {
+    background-color: #1a1a1a;
+    border-bottom-color: #333;
+  }
+
+  .logo {
+    color: #ededed;
+  }
+
+  .time {
+    color: #ededed;
+  }
+
+  .date {
+    color: #999;
+  }
+
+  .weather {
+    background-color: #2a2a2a;
+  }
+
+  .location {
+    color: #999;
+  }
+
+  .temperature {
+    color: #ededed;
+  }
+
+  .condition {
+    color: #999;
+  }
+
+  .weatherError,
+  .weatherLoading {
+    color: #999;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+  }
+
+  .logo {
+    font-size: 1.5rem;
+  }
+
+  .rightSection {
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .time {
+    font-size: 1rem;
+  }
+
+  .date {
+    font-size: 0.75rem;
+  }
+
+  .weather {
+    padding: 0.375rem 0.75rem;
+  }
+
+  .temperature {
+    font-size: 1rem;
+  }
+
+  .condition {
+    font-size: 0.7rem;
+  }
+}
+
+/* High contrast mode support */
+body.high-contrast-mode .navbar {
+  border-bottom: 3px solid #000000;
+  background-color: #ffffff;
+}
+
+body.high-contrast-mode .logo,
+body.high-contrast-mode .time,
+body.high-contrast-mode .temperature {
+  color: #000000;
+}
+
+body.high-contrast-mode .weather {
+  border: 2px solid #000000;
+  background-color: #ffffff;
+}
+
+/* Large text mode support */
+body.large-text-mode .navbar {
+  padding: 1.5rem 2rem;
+}
+
+body.large-text-mode .logo {
+  font-size: 2.5rem;
+}
+
+body.large-text-mode .time {
+  font-size: 1.75rem;
+}
+
+body.large-text-mode .date {
+  font-size: 1.25rem;
+}
+
+body.large-text-mode .temperature {
+  font-size: 1.5rem;
+}
+
+body.large-text-mode .condition {
+  font-size: 1rem;
+}
+
