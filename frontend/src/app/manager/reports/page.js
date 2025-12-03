@@ -108,6 +108,18 @@ export default function ReportsPage() {
     }
   };
 
+  const formatXReportDate = (dateString) => {
+    // dateString is in YYYY-MM-DD format
+    // Parse it directly to avoid timezone issues
+    const [year, month, day] = dateString.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    return date.toLocaleDateString('en-US', {
+      month: 'numeric',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   const handleXReportGenerate = async () => {
     setLoadingXReport(true);
     setXReportData(null);
@@ -517,7 +529,7 @@ export default function ReportsPage() {
           {xReportData && (
             <div className={styles.xReportResults}>
               <h3 className={styles.xReportTitle}>
-                X-Report for {new Date(xReportDate).toLocaleDateString()}
+                X-Report for {formatXReportDate(xReportDate)}
               </h3>
               <table className={styles.xReportTable}>
                 <thead>
