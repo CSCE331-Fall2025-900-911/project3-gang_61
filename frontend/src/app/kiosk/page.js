@@ -163,6 +163,10 @@ export default function KioskPage() {
 
   // Handle product click
   const handleProductClick = (product) => {
+    // Don't allow clicking if stock is 0
+    if (product.stock === 0) {
+      return;
+    }
     const category = product.category || "";
     // Check if it's a drink category (Milk Drink, Fruit Drink, or Seasonal)
     if (
@@ -331,36 +335,53 @@ export default function KioskPage() {
         <div className={styles.productsSection}>
           <h2 className={styles.sectionTitle}>{selectedCategory}</h2>
           <div className={styles.productsGrid}>
-            {categorizedProducts[selectedCategory]?.map((product) => (
-              <div
-                key={product.product_id}
-                className={styles.productCard}
-                onClick={() => handleProductClick(product)}
-              >
-                <div className={styles.productImageWrapper}>
-                  <img
-                    src={getProductImageSrc(product)}
-                    alt={product.product_name}
-                    loading="lazy"
-                    style={{
-                      width: "100%",
-                      height: "120px",
-                      objectFit: "contain",
-                      borderRadius: 6,
-                    }}
-                  />
-                </div>
-                <div className={styles.productName}>{product.product_name}</div>
-                <div className={styles.productPrice}>
-                  ${parseFloat(product.price).toFixed(2)}
-                </div>
-                {product.stock !== undefined && (
-                  <div className={styles.productStock}>
-                    Stock: {product.stock}
+            {categorizedProducts[selectedCategory]?.map((product) => {
+              const isOutOfStock = product.stock === 0;
+              const isLowStock =
+                product.stock !== undefined &&
+                product.stock > 0 &&
+                product.stock < 25;
+              return (
+                <div
+                  key={product.product_id}
+                  className={`${styles.productCard} ${
+                    isOutOfStock ? styles.productCardDisabled : ""
+                  }`}
+                  onClick={() => handleProductClick(product)}
+                >
+                  <div className={styles.productImageWrapper}>
+                    <img
+                      src={getProductImageSrc(product)}
+                      alt={product.product_name}
+                      loading="lazy"
+                      style={{
+                        width: "100%",
+                        height: "120px",
+                        objectFit: "contain",
+                        borderRadius: 6,
+                      }}
+                    />
                   </div>
-                )}
-              </div>
-            ))}
+                  <div className={styles.productName}>
+                    {product.product_name}
+                  </div>
+                  <div className={styles.productPrice}>
+                    ${parseFloat(product.price).toFixed(2)}
+                  </div>
+                  {product.stock !== undefined && (
+                    <div className={styles.productStock}>
+                      Stock: {product.stock}
+                    </div>
+                  )}
+                  {isOutOfStock && (
+                    <div className={styles.outOfStockBadge}>Out of Stock</div>
+                  )}
+                  {isLowStock && !isOutOfStock && (
+                    <div className={styles.lowStockWarning}>Low Stock</div>
+                  )}
+                </div>
+              );
+            })}
             {(!categorizedProducts[selectedCategory] ||
               categorizedProducts[selectedCategory].length === 0) && (
               <div className={styles.noProducts}>
@@ -536,6 +557,10 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
   };
 
   const handleAddToCart = () => {
+    // Don't allow adding to cart if stock is 0
+    if (product.stock === 0) {
+      return;
+    }
     onAddToCart({
       iceLevel,
       sugarLevel,
@@ -641,8 +666,12 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
           <button onClick={onClose} className={styles.modalCancelButton}>
             Cancel
           </button>
-          <button onClick={handleAddToCart} className={styles.modalAddButton}>
-            Add to Cart
+          <button
+            onClick={handleAddToCart}
+            className={styles.modalAddButton}
+            disabled={product.stock === 0}
+          >
+            {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
           </button>
         </div>
       </div>

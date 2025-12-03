@@ -502,6 +502,26 @@ export async function fetchTop5MenuItems() {
 }
 
 /**
+ * Fetch all menu items with order counts
+ * @returns {Promise<Array>} Array of all menu items with order counts
+ */
+export async function fetchAllMenuItems() {
+  const response = await fetch(buildApiUrl("/reports/all-menu-items"), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to fetch all menu items");
+  }
+
+  return response.json();
+}
+
+/**
  * Fetch top 5 most used ingredients
  * @returns {Promise<Array>} Array of top ingredients
  */

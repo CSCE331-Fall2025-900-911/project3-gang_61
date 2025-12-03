@@ -4,6 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from "recharts";
+import {
   fetchDailySales,
   fetchLowestStock,
   fetchPeakSales,
@@ -12,6 +20,7 @@ import {
   fetchTop50Orders,
   fetchTop5MenuItems,
   fetchTop5Ingredients,
+  fetchAllMenuItems,
   generateXReport as generateXReportAPI,
 } from "@/lib/api";
 import { logout } from "@/lib/auth";
@@ -23,6 +32,7 @@ export default function ReportsPage() {
   const router = useRouter();
   const [selectedQuery, setSelectedQuery] = useState(null);
   const [queryResults, setQueryResults] = useState(null);
+  const [allMenuItems, setAllMenuItems] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [xReportDate, setXReportDate] = useState(
@@ -72,7 +82,12 @@ export default function ReportsPage() {
           results = await fetchTop50Orders();
           break;
         case "top-5-menu-items":
-          results = await fetchTop5MenuItems();
+          const [top5Results, allItemsResults] = await Promise.all([
+            fetchTop5MenuItems(),
+            fetchAllMenuItems(),
+          ]);
+          results = top5Results;
+          setAllMenuItems(allItemsResults);
           break;
         case "top-5-ingredients":
           results = await fetchTop5Ingredients();
@@ -81,6 +96,10 @@ export default function ReportsPage() {
           results = null;
       }
       setQueryResults(results);
+      // Clear allMenuItems when switching away from top-5-menu-items
+      if (queryId !== "top-5-menu-items") {
+        setAllMenuItems(null);
+      }
     } catch (err) {
       setError(err.message || "Failed to fetch report data");
       console.error("Error fetching report:", err);
@@ -286,11 +305,116 @@ export default function ReportsPage() {
         );
 
       case "top-5-menu-items":
+        // Prepare data for pie chart - show all items individually
+        const top5ProductIds = new Set(
+          queryResults.map((item) => item.product_id)
+        );
+        const pieChartData = allMenuItems
+          ? allMenuItems.map((item) => ({
+              name: item.product_name,
+              value: parseInt(item.order_count),
+              isTop5: top5ProductIds.has(item.product_id),
+            }))
+          : [];
+
+        // Sort by value (descending) to ensure top 5 are first
+        const sortedChartData = [...pieChartData].sort(
+          (a, b) => b.value - a.value
+        );
+
+        // Generate colors: vibrant for top 5, muted for others
+        const generateColor = (index, isTop5) => {
+          if (isTop5) {
+            // Vibrant colors for top 5
+            const vibrantColors = [
+              "#dc2626", // Red
+              "#3b82f6", // Blue
+              "#10b981", // Green
+              "#f59e0b", // Amber
+              "#8b5cf6", // Purple
+            ];
+            return vibrantColors[index % 5];
+          } else {
+            // Muted colors for other items - generate a palette
+            const mutedColors = [
+              "#94a3b8", // Slate
+              "#a8a29e", // Stone
+              "#cbd5e1", // Light slate
+              "#d1d5db", // Gray
+              "#e2e8f0", // Light slate
+            ];
+            return mutedColors[index % mutedColors.length];
+          }
+        };
+
         return (
           <div className={styles.resultsContainer}>
             <h3 className={styles.resultsTitle}>
               Top 5 Most Ordered Menu Items
             </h3>
+            {sortedChartData.length > 0 && (
+              <div style={{ marginBottom: "30px", height: "500px" }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={sortedChartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value, isTop5 }) => {
+                        // Show labels for all items, but emphasize top 5
+                        // Truncate long names for better readability
+                        const displayName =
+                          name.length > 20
+                            ? `${name.substring(0, 20)}...`
+                            : name;
+                        return isTop5
+                          ? `${displayName}: ${value}`
+                          : `${displayName}: ${value}`;
+                      }}
+                      outerRadius={140}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {sortedChartData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={generateColor(index, entry.isTop5)}
+                          opacity={entry.isTop5 ? 1 : 0.6}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value, name) => [`${value} orders`, name]}
+                    />
+                    <Legend
+                      wrapperStyle={{ fontSize: "12px" }}
+                      formatter={(value, entry) => {
+                        const data = sortedChartData.find(
+                          (d) => d.name === value
+                        );
+                        // Truncate long names in legend
+                        const displayName =
+                          value.length > 25
+                            ? `${value.substring(0, 25)}...`
+                            : value;
+                        return data?.isTop5 ? (
+                          <span
+                            style={{ fontWeight: "bold", color: entry.color }}
+                          >
+                            {displayName}
+                          </span>
+                        ) : (
+                          <span style={{ opacity: 1, color: entry.color }}>
+                            {displayName}
+                          </span>
+                        );
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            )}
             <table className={styles.resultsTable}>
               <thead>
                 <tr>
@@ -441,7 +565,7 @@ export default function ReportsPage() {
               className={styles.navButton}
               title="Back to Manager View"
             >
-              Manager View
+              Back to Dashboard
             </button>
             <button
               onClick={() => router.push("/manager")}

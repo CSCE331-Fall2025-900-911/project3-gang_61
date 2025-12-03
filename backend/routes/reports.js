@@ -152,6 +152,29 @@ router.get("/top-5-menu-items", async (req, res, next) => {
 });
 
 /**
+ * GET /api/reports/all-menu-items
+ * Get all menu items with their order counts (for pie chart)
+ */
+router.get("/all-menu-items", async (req, res, next) => {
+  try {
+    const result = await query(
+      `SELECT 
+          i.product_id,
+          p.product_name,
+          COUNT(*) AS order_count
+       FROM items i
+       JOIN products p ON i.product_id = p.product_id
+       WHERE p.category NOT IN ('Supply', 'Add-on')
+       GROUP BY i.product_id, p.product_name
+       ORDER BY order_count DESC`
+    );
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/reports/top-5-ingredients
  * Get top 5 most used ingredients (inventory items)
  */
