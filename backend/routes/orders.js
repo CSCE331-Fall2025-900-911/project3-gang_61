@@ -46,8 +46,8 @@ router.post("/", async (req, res, next) => {
     }
 
     // Insert order
-    // Kiosk orders are always "complete" since they're self-service
-    // Cashier orders (future) will have employee_id > 0 and may have different statuses
+    // Orders are marked as "Completed" when created
+    // Cancelled orders should be marked as "Cancelled"
     const orderResult = await client.query(
       `INSERT INTO orders (member_id, employee_id, order_time, order_status)
        VALUES ($1, $2, $3, $4)
@@ -56,7 +56,7 @@ router.post("/", async (req, res, next) => {
         parseInt(member_id),
         parseInt(employee_id),
         timestamp || new Date().toISOString(),
-        "complete",
+        "Completed",
       ]
     );
 
@@ -165,20 +165,20 @@ router.post("/", async (req, res, next) => {
 /**
  * GET /api/orders
  * Fetch all orders (optional: for admin/management)
- * Query params: 
+ * Query params:
  *   - limit: number of recent orders to fetch (default: all)
  *   - includeItems: whether to include items array (default: true, set to false for faster queries)
  */
 router.get("/", async (req, res, next) => {
   try {
     const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
-    const includeItems = req.query.includeItems !== 'false';
-    
+    const includeItems = req.query.includeItems !== "false";
+
     // Validate limit is a positive integer (max 1000 for safety)
     const validLimit = limit && limit > 0 && limit <= 1000 ? limit : null;
-    
+
     let queryString;
-    
+
     if (includeItems) {
       // Full query with items (slower but complete)
       queryString = `SELECT o.*, 
@@ -222,7 +222,7 @@ router.get("/", async (req, res, next) => {
          ORDER BY o.order_time DESC NULLS LAST`;
       }
     }
-    
+
     // Add LIMIT clause only if not already in CTE
     if (validLimit && includeItems) {
       queryString += ` LIMIT ${validLimit}`;

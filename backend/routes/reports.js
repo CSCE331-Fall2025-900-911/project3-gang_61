@@ -224,12 +224,12 @@ router.get("/x-report", async (req, res, next) => {
 
     // Use explicit date casting to avoid timezone issues
     // Cast order_time to date and compare with input date
-    // Handle case variations: 'Completed', 'completed', 'complete' all count as completed
+    // Orders are consistently marked as 'Completed' or 'Cancelled'
     const result = await query(
       `SELECT 
           EXTRACT(HOUR FROM o.order_time)::int AS hour,
-          COUNT(DISTINCT CASE WHEN UPPER(TRIM(o.order_status)) IN ('COMPLETED', 'COMPLETE') THEN o.order_id END) AS order_count,
-          COALESCE(SUM(CASE WHEN UPPER(TRIM(o.order_status)) IN ('COMPLETED', 'COMPLETE') THEN i.price ELSE 0 END), 0) AS sales,
+          COUNT(DISTINCT CASE WHEN o.order_status = 'Completed' THEN o.order_id END) AS order_count,
+          COALESCE(SUM(CASE WHEN o.order_status = 'Completed' THEN i.price ELSE 0 END), 0) AS sales,
           COALESCE(SUM(CASE WHEN o.order_status = 'Returned' THEN i.price ELSE 0 END), 0) AS returns,
           COUNT(DISTINCT CASE WHEN o.order_status = 'Cancelled' THEN o.order_id END) AS cancelled_orders
        FROM orders o
@@ -245,7 +245,9 @@ router.get("/x-report", async (req, res, next) => {
     for (let i = 0; i < 24; i++) {
       const nextHour = (i + 1) % 24;
       hourlyData[i] = {
-        hour: `${i.toString().padStart(2, "0")}:00-${nextHour.toString().padStart(2, "0")}:00`,
+        hour: `${i.toString().padStart(2, "0")}:00-${nextHour
+          .toString()
+          .padStart(2, "0")}:00`,
         sales: 0,
         returns: 0,
         cancelledOrders: 0,
@@ -257,7 +259,9 @@ router.get("/x-report", async (req, res, next) => {
       const hour = parseInt(row.hour);
       const nextHour = (hour + 1) % 24;
       hourlyData[hour] = {
-        hour: `${hour.toString().padStart(2, "0")}:00-${nextHour.toString().padStart(2, "0")}:00`,
+        hour: `${hour.toString().padStart(2, "0")}:00-${nextHour
+          .toString()
+          .padStart(2, "0")}:00`,
         sales: parseFloat(row.sales || 0).toFixed(2),
         returns: parseFloat(row.returns || 0).toFixed(2),
         cancelledOrders: parseInt(row.cancelled_orders || 0),

@@ -368,7 +368,7 @@ export default function ManagerPage() {
                     <div className={styles.transactionStatus}>
                       Status:{" "}
                       <span className={styles.statusBadge}>
-                        {transaction.order_status || "complete"}
+                        {transaction.order_status || "Completed"}
                       </span>
                     </div>
                     <div className={styles.transactionTotal}>
