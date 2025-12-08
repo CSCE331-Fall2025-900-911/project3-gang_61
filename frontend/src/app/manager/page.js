@@ -1400,6 +1400,212 @@ function InventoryTableModal({ products, loading, onClose, onRefresh }) {
   );
 }
 
+// User Form Modal Component (Add/Edit)
+function UserFormModal({ mode, user = null, onClose, onSuccess }) {
+  const [formData, setFormData] = useState({
+    user_name: user?.user_name || "",
+    email: user?.email || "",
+    role: user?.role || "member",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const roles = ["manager", "cashier", "member"];
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      if (mode === "add") {
+        await createUser({
+          user_name: formData.user_name || null,
+          email: formData.email,
+          role: formData.role,
+        });
+        alert("User created successfully!");
+      } else {
+        await updateUser(user.user_id, {
+          user_name: formData.user_name || null,
+          email: formData.email,
+          role: formData.role,
+        });
+        alert("User updated successfully!");
+      }
+      onSuccess();
+    } catch (err) {
+      setError(err.message || "Operation failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div
+        className={styles.modalContent}
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: "500px", width: "90%" }}
+      >
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>
+            {mode === "add" ? "Add User" : "Edit User"}
+          </h2>
+          <button onClick={onClose} className={styles.modalCloseButton}>
+            ×
+          </button>
+        </div>
+
+        <div className={styles.modalBody} style={{ padding: "20px" }}>
+          {error && (
+            <div
+              style={{
+                padding: "12px",
+                backgroundColor: "#fee2e2",
+                color: "#991b1b",
+                borderRadius: "6px",
+                marginBottom: "16px",
+                fontSize: "14px",
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: "16px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "6px",
+                  fontWeight: 500,
+                  fontSize: "14px",
+                  color: "#333",
+                }}
+              >
+                Name (Optional)
+              </label>
+              <input
+                type="text"
+                name="user_name"
+                value={formData.user_name}
+                onChange={handleChange}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  border: "1px solid #d1d1d1",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  backgroundColor: "#f5f5f5",
+                  color: "#1a1a1a",
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "6px",
+                  fontWeight: 500,
+                  fontSize: "14px",
+                  color: "#333",
+                }}
+              >
+                Email <span style={{ color: "#ef4444" }}>*</span>
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  border: "1px solid #d1d1d1",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  backgroundColor: "#f5f5f5",
+                  color: "#1a1a1a",
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "6px",
+                  fontWeight: 500,
+                  fontSize: "14px",
+                  color: "#333",
+                }}
+              >
+                Role <span style={{ color: "#ef4444" }}>*</span>
+              </label>
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                required
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  border: "1px solid #d1d1d1",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  backgroundColor: "#f5f5f5",
+                  color: "#1a1a1a",
+                  cursor: "pointer",
+                  textTransform: "capitalize",
+                }}
+              >
+                {roles.map((role) => (
+                  <option key={role} value={role}>
+                    {role.charAt(0).toUpperCase() + role.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button
+                type="button"
+                onClick={onClose}
+                className={styles.modalCancelButton}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className={styles.modalAddButton}
+                disabled={loading}
+              >
+                {loading
+                  ? "Processing..."
+                  : mode === "add"
+                  ? "Create User"
+                  : "Update User"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Product Form Modal Component (Add/Edit)
 function ProductFormModal({ mode, product = null, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
