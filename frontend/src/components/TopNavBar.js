@@ -16,6 +16,7 @@ const buildApiUrl = (path) => {
 };
 
 export default function TopNavBar() {
+  const pathname = usePathname();
   const [currentTime, setCurrentTime] = useState(null);
   const [weather, setWeather] = useState(null);
   const [hasError, setHasError] = useState(false);
