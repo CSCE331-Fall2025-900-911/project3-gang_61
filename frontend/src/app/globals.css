@@ -25,7 +25,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
   filter: var(--contrast-filter, none);
   padding-top: 80px; /* Account for fixed navbar height */
-  padding-bottom: 40px; /* Account for fixed bottom nav bar height */
+  padding-bottom: 80px; /* Account for fixed bottom nav bar height */
+}
+
+/* Remove padding on login page */
+body.login-page {
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 * {
