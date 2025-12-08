@@ -16,13 +16,16 @@ const buildApiUrl = (path) => {
 };
 
 export default function TopNavBar() {
-  const pathname = usePathname();
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState(null);
   const [weather, setWeather] = useState(null);
   const [hasError, setHasError] = useState(false);
 
-  // Update time every second
+  // Initialize and update time every second (only on client)
   useEffect(() => {
+    // Set initial time
+    setCurrentTime(new Date());
+    
+    // Update time every second
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -104,8 +107,17 @@ export default function TopNavBar() {
       </div>
       <div className={styles.rightSection}>
         <div className={styles.timeDate}>
-          <div className={styles.time}>{formatTime(currentTime)}</div>
-          <div className={styles.date}>{formatDate(currentTime)}</div>
+          {currentTime ? (
+            <>
+              <div className={styles.time}>{formatTime(currentTime)}</div>
+              <div className={styles.date}>{formatDate(currentTime)}</div>
+            </>
+          ) : (
+            <>
+              <div className={styles.time}>--:--:-- --</div>
+              <div className={styles.date}>Loading...</div>
+            </>
+          )}
         </div>
         <div className={styles.weather}>
           {weather ? (
