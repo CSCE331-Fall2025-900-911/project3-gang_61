@@ -6,10 +6,13 @@
   background-color: #ffffff;
   border-bottom: 2px solid #e5e5e5;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 1000;
+  left: 0;
+  right: 0;
+  z-index: 998;
   width: 100%;
+  margin: 0;
 }
 
 .leftSection {

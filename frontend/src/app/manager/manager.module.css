@@ -1,7 +1,8 @@
 .cashierContainer,
 .managerContainer {
   width: 100%;
-  min-height: calc(100vh - 80px); /* Account for bottom bar */
+  height: calc(100vh - 160px); /* Account for navbar (80px) and bottom bar (80px) */
+  max-height: calc(100vh - 160px);
   display: flex;
   flex-direction: column;
   background-color: #f5f5f5;
@@ -28,8 +29,8 @@
   gap: 20px;
   padding: 20px;
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
+  height: 100%;
 }
 
 /* Recent Transactions Sidebar */
@@ -41,6 +42,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  height: 100%;
+  max-height: calc(100vh - 160px);
 }
 
 .sidebarTitle {
@@ -55,7 +58,9 @@
 .transactionsList {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   margin-top: 16px;
+  min-height: 0;
 }
 
 .loadingTransactions,
@@ -147,6 +152,8 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  max-height: calc(100vh - 160px);
 }
 
 .productsScrollContainer {
@@ -266,12 +273,16 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  height: 100%;
+  max-height: calc(100vh - 160px);
 }
 
 .cartItems {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   margin-bottom: 16px;
+  min-height: 0;
 }
 
 .emptyCart {

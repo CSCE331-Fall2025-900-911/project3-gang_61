@@ -190,7 +190,12 @@ export default function ManagerPage() {
   // Calculate total
   const calculateTotal = () => {
     return cart.reduce((total, item) => {
-      const productPrice = parseFloat(item.product.price) || 0;
+      const basePrice = parseFloat(item.product.price) || 0;
+      // Calculate size price modifier
+      const sizeModifier = item.modifications.size === "Small" ? 0 :
+                          item.modifications.size === "Regular" ? 0.5 :
+                          item.modifications.size === "Large" ? 1.0 : 0.5; // Default to Regular
+      const productPrice = basePrice + sizeModifier;
       const addOnsPrice =
         item.modifications.addOns?.reduce((sum, addOn) => {
           return sum + (parseFloat(addOn.price) || 0);
@@ -209,13 +214,21 @@ export default function ManagerPage() {
     try {
       const total = calculateTotal();
       const orderData = {
-        items: cart.map((item) => ({
-          product_id: item.product.product_id,
-          product_name: item.product.product_name,
-          quantity: item.quantity,
-          price: item.product.price,
-          modifications: item.modifications,
-        })),
+        items: cart.map((item) => {
+          const basePrice = parseFloat(item.product.price) || 0;
+          // Calculate size price modifier
+          const sizeModifier = item.modifications.size === "Small" ? 0 :
+                              item.modifications.size === "Regular" ? 0.5 :
+                              item.modifications.size === "Large" ? 1.0 : 0.5; // Default to Regular
+          const finalPrice = basePrice + sizeModifier;
+          return {
+            product_id: item.product.product_id,
+            product_name: item.product.product_name,
+            quantity: item.quantity,
+            price: finalPrice,
+            modifications: item.modifications,
+          };
+        }),
         total: total,
         timestamp: new Date().toISOString(),
         member_id: memberId,
@@ -455,6 +468,11 @@ export default function ManagerPage() {
                       ×
                     </button>
                   </div>
+                  {item.modifications.size && (
+                    <div className={styles.cartItemMod}>
+                      Size: {item.modifications.size}
+                    </div>
+                  )}
                   {item.modifications.iceLevel && (
                     <div className={styles.cartItemMod}>
                       Ice: {item.modifications.iceLevel}
@@ -496,7 +514,13 @@ export default function ManagerPage() {
                     </div>
                     <div className={styles.cartItemPrice}>
                       {`$${(
-                        ((parseFloat(item.product.price) || 0) +
+                        ((() => {
+                          const basePrice = parseFloat(item.product.price) || 0;
+                          const sizeModifier = item.modifications.size === "Small" ? 0 :
+                                              item.modifications.size === "Regular" ? 0.5 :
+                                              item.modifications.size === "Large" ? 1.0 : 0.5;
+                          return basePrice + sizeModifier;
+                        })() +
                           (item.modifications.addOns?.reduce(
                             (sum, a) => sum + (parseFloat(a.price) || 0),
                             0
@@ -1872,10 +1896,16 @@ function ProductFormModal({ mode, product = null, onClose, onSuccess }) {
 function ModificationModal({ product, addOns, onClose, onAddToCart }) {
   const [iceLevel, setIceLevel] = useState("Regular");
   const [sugarLevel, setSugarLevel] = useState("Regular");
+  const [size, setSize] = useState("Regular");
   const [selectedAddOns, setSelectedAddOns] = useState([]);
 
   const iceLevels = ["No Ice", "Less Ice", "Regular", "Extra Ice"];
   const sugarLevels = ["No Sugar", "Less Sugar", "Regular", "Extra Sugar"];
+  const sizes = [
+    { name: "Small", priceModifier: 0 },
+    { name: "Regular", priceModifier: 0.5 },
+    { name: "Large", priceModifier: 1.0 },
+  ];
 
   const toggleAddOn = (addOn) => {
     setSelectedAddOns((prev) => {
@@ -1896,6 +1926,7 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
     onAddToCart({
       iceLevel,
       sugarLevel,
+      size,
       addOns: selectedAddOns,
     });
   };
@@ -1911,6 +1942,31 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
         </div>
 
         <div className={styles.modalBody}>
+          {/* Size Selection */}
+          <div className={styles.modificationSection}>
+            <h3 className={styles.modificationTitle}>Size</h3>
+            <div className={styles.optionButtons}>
+              {sizes.map((sizeOption) => {
+                const basePrice = parseFloat(product.price) || 0;
+                const sizePrice = basePrice + sizeOption.priceModifier;
+                return (
+                  <button
+                    key={sizeOption.name}
+                    onClick={() => setSize(sizeOption.name)}
+                    className={`${styles.optionButton} ${
+                      size === sizeOption.name ? styles.optionButtonActive : ""
+                    }`}
+                  >
+                    <div>{sizeOption.name}</div>
+                    <div style={{ fontSize: "0.875rem", marginTop: "4px" }}>
+                      ${sizePrice.toFixed(2)}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Ice Level Selection */}
           <div className={styles.modificationSection}>
             <h3 className={styles.modificationTitle}>Ice Level</h3>

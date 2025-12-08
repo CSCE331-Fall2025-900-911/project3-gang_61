@@ -73,6 +73,7 @@ router.post("/", async (req, res, next) => {
       const modifications = cartItem.modifications || {};
       const iceLevel = modifications.iceLevel || null;
       const sugarLevel = modifications.sugarLevel || null;
+      const size = modifications.size || null;
       const addOns = modifications.addOns || [];
 
       // Create groups for each quantity (e.g., if quantity is 2, create 2 separate groups)
@@ -81,15 +82,16 @@ router.post("/", async (req, res, next) => {
 
         // Insert main product item
         const mainItemResult = await client.query(
-          `INSERT INTO items (order_id, product_id, price, sugar_level, ice_level, group_id)
-           VALUES ($1, $2, $3, $4, $5, $6)
-           RETURNING item_id, order_id, product_id, price, sugar_level, ice_level, group_id`,
+          `INSERT INTO items (order_id, product_id, price, sugar_level, ice_level, size, group_id)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           RETURNING item_id, order_id, product_id, price, sugar_level, ice_level, size, group_id`,
           [
             orderId,
             cartItem.product_id,
             parseFloat(cartItem.price) || 0,
             sugarLevel,
             iceLevel,
+            size,
             groupId,
           ]
         );
@@ -98,15 +100,16 @@ router.post("/", async (req, res, next) => {
         // Insert add-on items (same group_id as the main product)
         for (const addOn of addOns) {
           const addOnResult = await client.query(
-            `INSERT INTO items (order_id, product_id, price, sugar_level, ice_level, group_id)
-             VALUES ($1, $2, $3, $4, $5, $6)
-             RETURNING item_id, order_id, product_id, price, sugar_level, ice_level, group_id`,
+            `INSERT INTO items (order_id, product_id, price, sugar_level, ice_level, size, group_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
+             RETURNING item_id, order_id, product_id, price, sugar_level, ice_level, size, group_id`,
             [
               orderId,
               addOn.product_id,
               parseFloat(addOn.price) || 0,
               null, // Add-ons don't have sugar/ice levels
               null,
+              null, // Add-ons don't have size
               groupId, // Same group as the main product
             ]
           );
@@ -190,6 +193,7 @@ router.get("/", async (req, res, next) => {
                       'price', i.price,
                       'sugar_level', i.sugar_level,
                       'ice_level', i.ice_level,
+                      'size', i.size,
                       'group_id', i.group_id
                     ) ORDER BY i.group_id, i.item_id
                   ) FILTER (WHERE i.item_id IS NOT NULL),
