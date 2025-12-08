@@ -10,6 +10,11 @@ import {
   ResponsiveContainer,
   Legend,
   Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
 } from "recharts";
 import {
   fetchDailySales,
@@ -111,12 +116,12 @@ export default function ReportsPage() {
   const formatXReportDate = (dateString) => {
     // dateString is in YYYY-MM-DD format
     // Parse it directly to avoid timezone issues
-    const [year, month, day] = dateString.split('-');
+    const [year, month, day] = dateString.split("-");
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    return date.toLocaleDateString('en-US', {
-      month: 'numeric',
-      day: 'numeric',
-      year: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      month: "numeric",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -161,9 +166,59 @@ export default function ReportsPage() {
 
     switch (selectedQuery) {
       case "daily-sales":
+        // Prepare data for bar chart
+        const chartData = queryResults.map((row) => ({
+          date: new Date(row.day).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          }),
+          revenue: parseFloat(row.total_revenue || 0),
+          orders: parseInt(row.total_orders || 0),
+        }));
+
         return (
           <div className={styles.resultsContainer}>
             <h3 className={styles.resultsTitle}>Daily Sales</h3>
+            {chartData.length > 0 && (
+              <div style={{ marginBottom: "30px", height: "400px" }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="date"
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                      style={{ fontSize: "12px" }}
+                    />
+                    <YAxis
+                      label={{
+                        value: "Revenue ($)",
+                        angle: -90,
+                        position: "insideLeft",
+                      }}
+                      style={{ fontSize: "12px" }}
+                    />
+                    <Tooltip
+                      formatter={(value, name) => {
+                        if (name === "revenue") {
+                          return [`$${value.toFixed(2)}`, "Revenue"];
+                        }
+                        return [value, "USD"];
+                      }}
+                      labelFormatter={(label) => `Date: ${label}`}
+                    />
+                    <Legend />
+                    <Bar
+                      dataKey="revenue"
+                      fill="#dc2626"
+                      name="Revenue ($)"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
             <table className={styles.resultsTable}>
               <thead>
                 <tr>
