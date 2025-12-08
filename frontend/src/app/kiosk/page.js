@@ -62,7 +62,7 @@ export default function KioskPage() {
   const [orderSubtotal, setOrderSubtotal] = useState(0);
 
   // Verify that the user logged in through sign-in services
-  useRequireAuth(router);
+  //useRequireAuth(router);
 
   // Load member_id from URL params or sessionStorage (optional, for guest orders)
   // For kiosk orders, employee_id is always 0 (self-service)
