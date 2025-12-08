@@ -15,6 +15,8 @@ const mapCategoryToDisplay = (dbCategory) => {
   const categoryMap = {
     "Milk Drink": "Milk Drinks",
     "Fruit Drink": "Fruit Drinks",
+    "Blended Drink": "Blended Drinks",
+    "Caffeinated Drink": "Caffeinated Drinks",
     Seasonal: "Seasonal",
     Side: "Sides",
   };
@@ -26,6 +28,8 @@ const getCategoryImage = (category) => {
   const imageMap = {
     "Milk Drinks": "/categories/milk.png",
     "Fruit Drinks": "/categories/fruit.png",
+    "Blended Drinks": "/categories/blended.png",
+    "Caffeinated Drinks": "/categories/caffeinated.png",
     Seasonal: "/categories/seasonal.png",
     Sides: "/categories/sides.png",
   };
@@ -109,6 +113,8 @@ export default function KioskPage() {
     const categorized = {
       "Milk Drinks": [],
       "Fruit Drinks": [],
+      "Blended Drinks": [],
+      "Caffeinated Drinks": [],
       Seasonal: [],
       Sides: [],
     };
