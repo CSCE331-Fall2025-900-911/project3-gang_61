@@ -25,6 +25,17 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "Missing required fields: product_name, category, and price are required" });
     }
 
+    try {
+      await pool.query(
+        "SELECT setval('products_product_id_seq', COALESCE((SELECT MAX(product_id) FROM products), 0), true)"
+      );
+    } catch (seqError) {
+      console.warn(
+        "Could not reset sequence (this is usually fine if sequence doesn't exist):",
+        seqError.message
+      );
+    }
+    
     const result = await pool.query(
       "INSERT INTO products (product_name, category, price, stock) VALUES ($1, $2, $3, $4) RETURNING *",
       [product_name, category, price, stock !== "" && stock !== null ? stock : null]

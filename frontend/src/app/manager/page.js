@@ -24,6 +24,8 @@ const mapCategoryToDisplay = (dbCategory) => {
   const categoryMap = {
     "Milk Drink": "Milk Drinks",
     "Fruit Drink": "Fruit Drinks",
+    "Blended Drink": "Blended Drinks",
+    "Caffeinated Drink": "Caffeinated Drinks",
     Seasonal: "Seasonal",
     Side: "Sides",
   };
@@ -60,6 +62,8 @@ export default function ManagerPage() {
     const categorized = {
       "Milk Drinks": [],
       "Fruit Drinks": [],
+      "Blended Drinks": [],
+      "Caffeinated Drinks": [],
       Seasonal: [],
       Sides: [],
     };
@@ -1659,6 +1663,8 @@ function ProductFormModal({ mode, product = null, onClose, onSuccess }) {
   const categories = [
     "Milk Drink",
     "Fruit Drink",
+    "Blended Drink",
+    "Caffeinated Drink",
     "Seasonal",
     "Side",
     "Add-on",

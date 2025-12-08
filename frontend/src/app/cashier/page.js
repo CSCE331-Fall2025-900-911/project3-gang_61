@@ -43,6 +43,8 @@ export default function CashierPage() {
     const categorized = {
       "Milk Drinks": [],
       "Fruit Drinks": [],
+      "Blended Drinks": [],
+      "Caffeinated Drinks": [],
       Seasonal: [],
       Sides: [],
     };

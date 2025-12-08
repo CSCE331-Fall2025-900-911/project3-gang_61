@@ -69,7 +69,7 @@ export default function TopNavBar() {
   }, []);
 
   // Don't render navbar on login page - AFTER all hooks
-  if (pathname === "/" || pathname === "/login") {
+  if (usePathname === "/" || usePathname === "/login") {
     return null;
   }
 

@@ -175,6 +175,8 @@ export default function KioskPage() {
     if (
       category === "Milk Drink" ||
       category === "Fruit Drink" ||
+      category === "Blended Drink" ||
+      category === "Caffeinated Drink" ||
       category === "Seasonal"
     ) {
       setSelectedProduct(product);
