@@ -96,10 +96,12 @@ export default function CashierPage() {
       return;
     }
     const category = product.category || "";
-    // Check if it's a drink category (Milk Drink, Fruit Drink, or Seasonal)
+    // Check if it's a drink category 
     if (
       category === "Milk Drink" ||
       category === "Fruit Drink" ||
+      category === "Blended Drink" ||
+      category === "Caffeinated Drink" ||
       category === "Seasonal"
     ) {
       setSelectedProduct(product);
