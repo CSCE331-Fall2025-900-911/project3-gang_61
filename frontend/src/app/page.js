@@ -432,6 +432,14 @@ function LoginContent() {
 }
 
 export default function Login() {
+  // Add login-page class to body on mount, remove on unmount
+  useEffect(() => {
+    document.body.classList.add("login-page");
+    return () => {
+      document.body.classList.remove("login-page");
+    };
+  }, []);
+
   return (
     <Suspense
       fallback={
