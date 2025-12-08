@@ -301,50 +301,53 @@ export default function KioskPage() {
 
   if (loading) {
     return (
-      <div className={styles.kioskContainer}>
-        <div className={styles.loading}>Loading products...</div>
-      </div>
+      <main className={styles.kioskContainer} role="main" aria-busy="true">
+        <div className={styles.loading} aria-live="polite">Loading products...</div>
+      </main>
     );
   }
 
   if (error) {
     return (
-      <div className={styles.kioskContainer}>
-        <div className={styles.error}>{error}</div>
-      </div>
+      <main className={styles.kioskContainer} role="main">
+        <div className={styles.error} role="alert">{error}</div>
+      </main>
     );
   }
 
   return (
-    <div className={styles.kioskContainer}>
+    <main className={styles.kioskContainer} role="main">
       <div className={styles.kioskLayout}>
         {/* Left Sidebar - Categories */}
-        <div className={styles.categoriesSidebar}>
+        <nav className={styles.categoriesSidebar} aria-label="Product categories">
           <h2 className={styles.sidebarTitle}>Categories</h2>
-          <div className={styles.categoryButtons}>
+          <div className={styles.categoryButtons} role="tablist" aria-label="Category selection">
             {Object.keys(categorizedProducts)
               .filter((category) => categorizedProducts[category].length > 0)
               .map((category) => {
                 const imagePath = getCategoryImage(category);
+                const isActive = selectedCategory === category;
                 return (
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
                     className={`${styles.categoryButton} ${
-                      selectedCategory === category
-                        ? styles.categoryButtonActive
-                        : ""
+                      isActive ? styles.categoryButtonActive : ""
                     }`}
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-controls="products-panel"
                   >
                     {imagePath && (
                       <div className={styles.categoryImageContainer}>
                         <Image
                           src={imagePath}
-                          alt={category}
+                          alt="" /* Decorative image - text label provides meaning */
                           fill
                           className={styles.categoryImage}
                           style={{ objectFit: "contain" }}
                           unoptimized
+                          aria-hidden="true"
                         />
                       </div>
                     )}
@@ -353,12 +356,17 @@ export default function KioskPage() {
                 );
               })}
           </div>
-        </div>
+        </nav>
 
         {/* Middle - Products Grid */}
-        <div className={styles.productsSection}>
+        <section 
+          className={styles.productsSection} 
+          id="products-panel"
+          role="tabpanel"
+          aria-label={`${selectedCategory} products`}
+        >
           <h2 className={styles.sectionTitle}>{selectedCategory}</h2>
-          <div className={styles.productsGrid}>
+          <div className={styles.productsGrid} role="list">
             {categorizedProducts[selectedCategory]?.map((product) => {
               const isOutOfStock = product.stock === 0;
               const isLowStock =
@@ -366,20 +374,30 @@ export default function KioskPage() {
                 product.stock > 0 &&
                 product.stock < 25;
               return (
-                <div
+                <article
                   key={product.product_id}
                   className={`${styles.productCard} ${
                     isOutOfStock ? styles.productCardDisabled : ""
                   }`}
                   onClick={() => handleProductClick(product)}
+                  role="listitem"
+                  tabIndex={isOutOfStock ? -1 : 0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleProductClick(product);
+                    }
+                  }}
+                  aria-disabled={isOutOfStock}
+                  aria-label={`${product.product_name}, $${parseFloat(product.price).toFixed(2)}${isOutOfStock ? ', out of stock' : isLowStock ? ', low stock' : ''}`}
                 >
                   <div className={styles.productImageWrapper}>
                     <img
                       src={getProductImageSrc(product)}
-                      alt={product.product_name}
+                      alt="" /* Product name is provided in aria-label above */
                       loading="lazy"
+                      aria-hidden="true"
                       onError={(e) => {
-                        // Fallback to placeholder if image fails to load
                         if (e.target.src !== PLACEHOLDER_IMAGE) {
                           e.target.src = PLACEHOLDER_IMAGE;
                         }
@@ -409,7 +427,7 @@ export default function KioskPage() {
                   {isLowStock && !isOutOfStock && (
                     <div className={styles.lowStockWarning}>Low Stock</div>
                   )}
-                </div>
+                </article>
               );
             })}
             {(!categorizedProducts[selectedCategory] ||
@@ -419,17 +437,17 @@ export default function KioskPage() {
               </div>
             )}
           </div>
-        </div>
+        </section>
 
         {/* Right Sidebar - Cart */}
-        <div className={styles.cartSidebar}>
+        <aside className={styles.cartSidebar} aria-label="Shopping cart">
           <h2 className={styles.sidebarTitle}>Cart</h2>
-          <div className={styles.cartItems}>
+          <div className={styles.cartItems} role="list" aria-live="polite">
             {cart.length === 0 ? (
               <div className={styles.emptyCart}>Your cart is empty</div>
             ) : (
               cart.map((item) => (
-                <div key={item.id} className={styles.cartItem}>
+                <div key={item.id} className={styles.cartItem} role="listitem">
                   <div className={styles.cartItemHeader}>
                     <span className={styles.cartItemName}>
                       {item.product.product_name}
@@ -437,6 +455,7 @@ export default function KioskPage() {
                     <button
                       onClick={() => removeFromCart(item.id)}
                       className={styles.removeButton}
+                      aria-label={`Remove ${item.product.product_name} from cart`}
                     >
                       ×
                     </button>
@@ -472,15 +491,19 @@ export default function KioskPage() {
                           updateQuantity(item.id, item.quantity - 1)
                         }
                         className={styles.quantityButton}
+                        aria-label={`Decrease quantity of ${item.product.product_name}`}
                       >
                         −
                       </button>
-                      <span className={styles.quantity}>{item.quantity}</span>
+                      <span className={styles.quantity} aria-label={`Quantity: ${item.quantity}`}>
+                        {item.quantity}
+                      </span>
                       <button
                         onClick={() =>
                           updateQuantity(item.id, item.quantity + 1)
                         }
                         className={styles.quantityButton}
+                        aria-label={`Increase quantity of ${item.product.product_name}`}
                       >
                         +
                       </button>
@@ -509,16 +532,16 @@ export default function KioskPage() {
           {cart.length > 0 && (
             <div className={styles.cartTotal}>
               <div className={styles.totalLabel}>Total:</div>
-              <div className={styles.totalAmount}>
+              <div className={styles.totalAmount} aria-live="polite">
                 ${calculateTotal().toFixed(2)}
               </div>
             </div>
           )}
-        </div>
+        </aside>
       </div>
 
       {/* Bottom Bar - Action Buttons */}
-      <div className={styles.bottomBar}>
+      <footer className={styles.bottomBar} role="contentinfo">
         <div className={styles.leftActions}>
           <AccessibilityMenu />
           <button
@@ -527,7 +550,7 @@ export default function KioskPage() {
             aria-label="Logout"
             title="Logout"
           >
-            <Image src="/logout.svg" alt="Logout" width={28} height={28} />
+            <Image src="/logout.svg" alt="" width={28} height={28} aria-hidden="true" />
           </button>
         </div>
         <div className={styles.cartActions}>
@@ -538,7 +561,7 @@ export default function KioskPage() {
             aria-label="Clear Cart"
             title="Clear Cart"
           >
-            <Image src="/delete.svg" alt="Clear Cart" width={28} height={28} />
+            <Image src="/delete.svg" alt="" width={28} height={28} aria-hidden="true" />
           </button>
           <button
             onClick={handleCheckout}
@@ -549,7 +572,7 @@ export default function KioskPage() {
             Checkout (${calculateTotal().toFixed(2)})
           </button>
         </div>
-      </div>
+      </footer>
 
       {/* Modification Modal */}
       {showModificationModal && selectedProduct && (
@@ -573,7 +596,7 @@ export default function KioskPage() {
         subtotal={orderSubtotal}
         viewType="kiosk"
       />
-    </div>
+    </main>
   );
 }
 
