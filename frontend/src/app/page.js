@@ -226,7 +226,7 @@ function LoginContent() {
         <AccessibilityMenu />
       </div>
 
-      <div className={styles.container}>
+      <main className={styles.container}>
         <div className={styles.loginCard}>
           <h1 className={styles.brand}>Sharetea</h1>
           <p className={styles.subtitle}>
@@ -426,7 +426,7 @@ function LoginContent() {
             </>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
