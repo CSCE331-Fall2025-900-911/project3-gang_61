@@ -576,7 +576,7 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
   const [size, setSize] = useState("Regular");
   const [selectedAddOns, setSelectedAddOns] = useState([]);
 
-  const iceLevels = ["No Ice", "Less Ice", "Regular", "Extra Ice"];
+  const iceLevels = ["Hot", "No Ice", "Less Ice", "Regular", "Extra Ice"];
   const sugarLevels = ["No Sugar", "Less Sugar", "Regular", "Extra Sugar"];
   const sizes = [
     { name: "Small", priceModifier: 0 },
