@@ -36,7 +36,7 @@ export default function CashierPage() {
   const [orderSubtotal, setOrderSubtotal] = useState(0);
 
   // Verify that the user logged in through sign-in services
-  //useRequireAuth(router);
+  useRequireAuth(router);
 
   // Categorize products using database categories
   const categorizeProducts = () => {

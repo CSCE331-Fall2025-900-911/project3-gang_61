@@ -53,7 +53,7 @@ export default function ManagerPage() {
 
   // Verify that the user logged in through sign-in services
   //  verify user is a manager
-  //useRequireAuth(router);
+  useRequireAuth(router);
 
   // Categorize products using database categories
   const categorizeProducts = () => {
