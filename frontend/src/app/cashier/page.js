@@ -15,6 +15,8 @@ const mapCategoryToDisplay = (dbCategory) => {
   const categoryMap = {
     "Milk Drink": "Milk Drinks",
     "Fruit Drink": "Fruit Drinks",
+    "Blended Drink": "Blended Drinks",
+    "Caffeinated Drink": "Caffeinated Drinks",
     Seasonal: "Seasonal",
     Side: "Sides",
   };
