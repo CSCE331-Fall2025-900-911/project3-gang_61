@@ -184,9 +184,16 @@ export default function ManagerPage() {
       return;
     }
     setCart(
-      cart.map((item) =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
-      )
+      cart.map((item) => {
+        if (item.id === itemId) {
+          // Cap quantity at available stock
+          const maxQuantity =
+            item.product.stock !== undefined ? item.product.stock : Infinity;
+          const cappedQuantity = Math.min(newQuantity, maxQuantity);
+          return { ...item, quantity: cappedQuantity };
+        }
+        return item;
+      })
     );
   };
 
@@ -525,7 +532,9 @@ export default function ManagerPage() {
                             ✎
                           </button>
                         )}
-                        <span style={{ display: "inline-block", width: "8px" }} />
+                        <span
+                          style={{ display: "inline-block", width: "8px" }}
+                        />
 
                         <button
                           onClick={() => removeFromCart(item.id)}
@@ -574,7 +583,23 @@ export default function ManagerPage() {
                           onClick={() =>
                             updateQuantity(item.id, item.quantity + 1)
                           }
+                          disabled={
+                            item.product.stock !== undefined &&
+                            item.quantity >= item.product.stock
+                          }
                           className={styles.quantityButton}
+                          style={{
+                            opacity:
+                              item.product.stock !== undefined &&
+                              item.quantity >= item.product.stock
+                                ? 0.5
+                                : 1,
+                            cursor:
+                              item.product.stock !== undefined &&
+                              item.quantity >= item.product.stock
+                                ? "not-allowed"
+                                : "pointer",
+                          }}
                         >
                           +
                         </button>
@@ -1985,8 +2010,9 @@ function ProductFormModal({ mode, product = null, onClose, onSuccess }) {
 
 // Edit Cart Item Modal Component
 function EditCartItemModal({ cartItem, addOns, onClose, onUpdate }) {
+  const isBlendedDrink = cartItem.product.category === "Blended Drink";
   const [iceLevel, setIceLevel] = useState(
-    cartItem.modifications.iceLevel || "Regular"
+    isBlendedDrink ? "Regular" : cartItem.modifications.iceLevel || "Regular"
   );
   const [sugarLevel, setSugarLevel] = useState(
     cartItem.modifications.sugarLevel || "Regular"
@@ -2003,6 +2029,13 @@ function EditCartItemModal({ cartItem, addOns, onClose, onUpdate }) {
     { name: "Regular", priceModifier: 0.5 },
     { name: "Large", priceModifier: 1.0 },
   ];
+
+  // Lock ice level to "Regular" for blended drinks
+  useEffect(() => {
+    if (isBlendedDrink) {
+      setIceLevel("Regular");
+    }
+  }, [isBlendedDrink]);
 
   const toggleAddOn = (addOn) => {
     setSelectedAddOns((prev) => {
@@ -2066,17 +2099,24 @@ function EditCartItemModal({ cartItem, addOns, onClose, onUpdate }) {
           <div className={styles.modificationSection}>
             <h3 className={styles.modificationTitle}>Ice Level</h3>
             <div className={styles.optionButtons}>
-              {iceLevels.map((level) => (
-                <button
-                  key={level}
-                  onClick={() => setIceLevel(level)}
-                  className={`${styles.optionButton} ${
-                    iceLevel === level ? styles.optionButtonActive : ""
-                  }`}
-                >
-                  {level}
-                </button>
-              ))}
+              {iceLevels.map((level) => {
+                const isDisabled = isBlendedDrink && level !== "Regular";
+                return (
+                  <button
+                    key={level}
+                    onClick={() => !isDisabled && setIceLevel(level)}
+                    disabled={isDisabled}
+                    className={`${styles.optionButton} ${
+                      iceLevel === level ? styles.optionButtonActive : ""
+                    } ${isDisabled ? styles.optionButtonDisabled : ""}`}
+                    style={
+                      isDisabled ? { opacity: 0.2, cursor: "not-allowed" } : {}
+                    }
+                  >
+                    {level}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -2140,6 +2180,7 @@ function EditCartItemModal({ cartItem, addOns, onClose, onUpdate }) {
 
 // Modification Modal Component
 function ModificationModal({ product, addOns, onClose, onAddToCart }) {
+  const isBlendedDrink = product.category === "Blended Drink";
   const [iceLevel, setIceLevel] = useState("Regular");
   const [sugarLevel, setSugarLevel] = useState("Regular");
   const [size, setSize] = useState("Regular");
@@ -2152,6 +2193,13 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
     { name: "Regular", priceModifier: 0.5 },
     { name: "Large", priceModifier: 1.0 },
   ];
+
+  // Lock ice level to "Regular" for blended drinks
+  useEffect(() => {
+    if (isBlendedDrink) {
+      setIceLevel("Regular");
+    }
+  }, [isBlendedDrink]);
 
   const toggleAddOn = (addOn) => {
     setSelectedAddOns((prev) => {
@@ -2217,17 +2265,24 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
           <div className={styles.modificationSection}>
             <h3 className={styles.modificationTitle}>Ice Level</h3>
             <div className={styles.optionButtons}>
-              {iceLevels.map((level) => (
-                <button
-                  key={level}
-                  onClick={() => setIceLevel(level)}
-                  className={`${styles.optionButton} ${
-                    iceLevel === level ? styles.optionButtonActive : ""
-                  }`}
-                >
-                  {level}
-                </button>
-              ))}
+              {iceLevels.map((level) => {
+                const isDisabled = isBlendedDrink && level !== "Regular";
+                return (
+                  <button
+                    key={level}
+                    onClick={() => !isDisabled && setIceLevel(level)}
+                    disabled={isDisabled}
+                    className={`${styles.optionButton} ${
+                      iceLevel === level ? styles.optionButtonActive : ""
+                    } ${isDisabled ? styles.optionButtonDisabled : ""}`}
+                    style={
+                      isDisabled ? { opacity: 0.2, cursor: "not-allowed" } : {}
+                    }
+                  >
+                    {level}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
