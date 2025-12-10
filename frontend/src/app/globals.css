@@ -24,7 +24,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   filter: var(--contrast-filter, none);
-  padding-top: 80px; /* Account for fixed navbar height */
+  padding-top: 50px; /* Account for fixed navbar height */
   padding-bottom: 80px; /* Account for fixed bottom nav bar height */
 }
 

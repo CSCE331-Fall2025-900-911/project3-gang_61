@@ -381,7 +381,6 @@ export default function KioskPage() {
           className={styles.categoriesSidebar}
           aria-label="Product categories"
         >
-          <h2 className={styles.sidebarTitle}>Categories</h2>
           <div
             className={styles.categoryButtons}
             role="tablist"

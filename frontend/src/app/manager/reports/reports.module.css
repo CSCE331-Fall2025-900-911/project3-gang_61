@@ -10,6 +10,7 @@
   padding-bottom: 80px; /* Space for bottom bar */
   box-sizing: border-box;
   margin: 0;
+  margin-top: 15px; /* Extra spacing between navbar and interface */
 }
 
 .reportsLayout {
