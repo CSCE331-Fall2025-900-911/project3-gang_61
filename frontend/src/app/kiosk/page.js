@@ -346,7 +346,7 @@ export default function KioskPage() {
 
   if (loading) {
     return (
-      <main className={styles.kioskContainer} role="main" aria-busy="true">
+      <main className={styles.kioskContainer} aria-busy="true">
         <h1 style={{ position: 'absolute', left: '-10000px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }}>
           Kiosk Ordering System
         </h1>
@@ -359,7 +359,7 @@ export default function KioskPage() {
 
   if (error) {
     return (
-      <main className={styles.kioskContainer} role="main">
+      <main className={styles.kioskContainer}>
         <h1 style={{ position: 'absolute', left: '-10000px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }}>
           Kiosk Ordering System
         </h1>
@@ -372,9 +372,7 @@ export default function KioskPage() {
 
   return (
     <main className={styles.kioskContainer} role="main">
-      <h1 style={{ position: 'absolute', left: '-10000px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }}>
-        Kiosk Ordering System
-      </h1>
+      <h1 className="sr-only">Kiosk Ordering System</h1>
       <div className={styles.kioskLayout}>
         {/* Left Sidebar - Categories */}
         <nav
@@ -438,20 +436,14 @@ export default function KioskPage() {
                 product.stock > 0 &&
                 product.stock < 25;
               return (
-                <div
+                <button
                   key={product.product_id}
+                  type="button"
                   className={`${styles.productCard} ${
                     isOutOfStock ? styles.productCardDisabled : ""
                   }`}
                   onClick={() => handleProductClick(product)}
-                  tabIndex={isOutOfStock ? -1 : 0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      handleProductClick(product);
-                    }
-                  }}
-                  aria-disabled={isOutOfStock}
+                  disabled={isOutOfStock}
                   aria-label={`${product.product_name}, $${parseFloat(
                     product.price
                   ).toFixed(2)}${
@@ -498,7 +490,7 @@ export default function KioskPage() {
                   {isLowStock && !isOutOfStock && (
                     <div className={styles.lowStockWarning}>Low Stock</div>
                   )}
-                </div>
+                </button>
               );
             })}
             {(!categorizedProducts[selectedCategory] ||
