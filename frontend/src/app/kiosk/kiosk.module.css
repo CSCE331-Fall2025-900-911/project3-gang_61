@@ -9,6 +9,7 @@
   padding-bottom: 80px; /* Space for bottom bar */
   box-sizing: border-box;
   margin: 0;
+  margin-top: 15px; /* Extra spacing between navbar and interface */
 }
 
 .kioskLayout {
@@ -25,40 +26,42 @@
 .categoriesSidebar {
   background-color: #ffffff;
   border-radius: 12px;
-  padding: 20px;
+  padding: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebarTitle {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
   color: #1a1a1a; /* Darker color for better contrast */
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
   border-bottom: 2px solid #e5e5e5;
 }
 
 .categoryButtons {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 11px;
 }
 
 .categoryButton {
   width: 100%;
-  aspect-ratio: 1;
-  padding: 12px;
+  padding: 7px;
   background-color: #f5f5f5;
   border: 2px solid transparent;
-  border-radius: 12px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 3px;
+  min-height: 0;
 }
 
 .categoryButton:hover {
@@ -79,10 +82,10 @@
 
 .categoryImageContainer {
   width: 100%;
-  flex: 1;
+  height: 55px;
   position: relative;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 6px;
   min-height: 0;
 }
 
@@ -91,7 +94,7 @@
 }
 
 .categoryText {
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 600;
   color: #1a1a1a; /* Darker color for better contrast */
   text-align: center;

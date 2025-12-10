@@ -101,8 +101,8 @@ export default function TopNavBar() {
           <Image
             src="/sharetea.png"
             alt="ShareTea"
-            width={150}
-            height={50}
+            width={105}
+            height={35}
             className={styles.logo}
             priority
           />
