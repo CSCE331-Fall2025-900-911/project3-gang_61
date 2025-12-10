@@ -347,6 +347,9 @@ export default function KioskPage() {
   if (loading) {
     return (
       <main className={styles.kioskContainer} role="main" aria-busy="true">
+        <h1 style={{ position: 'absolute', left: '-10000px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }}>
+          Kiosk Ordering System
+        </h1>
         <div className={styles.loading} aria-live="polite">
           Loading products...
         </div>
@@ -357,6 +360,9 @@ export default function KioskPage() {
   if (error) {
     return (
       <main className={styles.kioskContainer} role="main">
+        <h1 style={{ position: 'absolute', left: '-10000px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }}>
+          Kiosk Ordering System
+        </h1>
         <div className={styles.error} role="alert">
           {error}
         </div>
@@ -366,6 +372,9 @@ export default function KioskPage() {
 
   return (
     <main className={styles.kioskContainer} role="main">
+      <h1 style={{ position: 'absolute', left: '-10000px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }}>
+        Kiosk Ordering System
+      </h1>
       <div className={styles.kioskLayout}>
         {/* Left Sidebar - Categories */}
         <nav
@@ -397,7 +406,7 @@ export default function KioskPage() {
                       <div className={styles.categoryImageContainer}>
                         <Image
                           src={imagePath}
-                          alt="" /* Decorative image - text label provides meaning */
+                          alt=""
                           fill
                           className={styles.categoryImage}
                           style={{ objectFit: "contain" }}
@@ -421,7 +430,7 @@ export default function KioskPage() {
           aria-label={`${selectedCategory} products`}
         >
           <h2 className={styles.sectionTitle}>{selectedCategory}</h2>
-          <div className={styles.productsGrid} role="list">
+          <div className={styles.productsGrid}>
             {categorizedProducts[selectedCategory]?.map((product) => {
               const isOutOfStock = product.stock === 0;
               const isLowStock =
@@ -429,13 +438,12 @@ export default function KioskPage() {
                 product.stock > 0 &&
                 product.stock < 25;
               return (
-                <article
+                <div
                   key={product.product_id}
                   className={`${styles.productCard} ${
                     isOutOfStock ? styles.productCardDisabled : ""
                   }`}
                   onClick={() => handleProductClick(product)}
-                  role="listitem"
                   tabIndex={isOutOfStock ? -1 : 0}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
@@ -457,7 +465,7 @@ export default function KioskPage() {
                   <div className={styles.productImageWrapper}>
                     <img
                       src={getProductImageSrc(product)}
-                      alt="" /* Product name is provided in aria-label above */
+                      alt=""
                       loading="lazy"
                       aria-hidden="true"
                       onError={(e) => {
@@ -490,7 +498,7 @@ export default function KioskPage() {
                   {isLowStock && !isOutOfStock && (
                     <div className={styles.lowStockWarning}>Low Stock</div>
                   )}
-                </article>
+                </div>
               );
             })}
             {(!categorizedProducts[selectedCategory] ||
@@ -505,143 +513,144 @@ export default function KioskPage() {
         {/* Right Sidebar - Cart */}
         <aside className={styles.cartSidebar} aria-label="Shopping cart">
           <h2 className={styles.sidebarTitle}>Cart</h2>
-          <div className={styles.cartItems} role="list" aria-live="polite">
+          <div className={styles.cartItems} aria-live="polite">
             {cart.length === 0 ? (
               <div className={styles.emptyCart}>Your cart is empty</div>
             ) : (
-              cart.map((item) => {
-                const category = item.product.category || "";
-                const isDrink =
-                  category === "Milk Drink" ||
-                  category === "Fruit Drink" ||
-                  category === "Blended Drink" ||
-                  category === "Caffeinated Drink" ||
-                  category === "Seasonal";
-                return (
-                  <div
-                    key={item.id}
-                    className={styles.cartItem}
-                    role="listitem"
-                  >
-                    <div className={styles.cartItemHeader}>
-                      <span className={styles.cartItemName}>
-                        {item.product.product_name}
-                      </span>
-                      <div style={{ display: "flex", gap: "4px" }}>
-                        {isDrink && (
-                          <button
-                            onClick={() => handleEditCartItem(item)}
-                            className={styles.editButton}
-                            aria-label={`Edit ${item.product.product_name}`}
-                            title="Edit"
-                          >
-                            ✎
-                          </button>
-                        )}
-                        <span style={{ display: "inline-block", width: "8px" }} />
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {cart.map((item) => {
+                  const category = item.product.category || "";
+                  const isDrink =
+                    category === "Milk Drink" ||
+                    category === "Fruit Drink" ||
+                    category === "Blended Drink" ||
+                    category === "Caffeinated Drink" ||
+                    category === "Seasonal";
+                  return (
+                    <li
+                      key={item.id}
+                      className={styles.cartItem}
+                    >
+                      <div className={styles.cartItemHeader}>
+                        <span className={styles.cartItemName}>
+                          {item.product.product_name}
+                        </span>
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          {isDrink && (
+                            <button
+                              onClick={() => handleEditCartItem(item)}
+                              className={styles.editButton}
+                              aria-label={`Edit ${item.product.product_name}`}
+                              title="Edit"
+                            >
+                              ✎
+                            </button>
+                          )}
+                          <span style={{ display: "inline-block", width: "8px" }} />
 
-                        <button
-                          onClick={() => removeFromCart(item.id)}
-                          className={styles.removeButton}
-                          aria-label={`Remove ${item.product.product_name} from cart`}
-                        >
-                          ×
-                        </button>
+                          <button
+                            onClick={() => removeFromCart(item.id)}
+                            className={styles.removeButton}
+                            aria-label={`Remove ${item.product.product_name} from cart`}
+                          >
+                            ×
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    {item.modifications.size && (
-                      <div className={styles.cartItemMod}>
-                        Size: {item.modifications.size}
-                      </div>
-                    )}
-                    {item.modifications.iceLevel && (
-                      <div className={styles.cartItemMod}>
-                        Ice: {item.modifications.iceLevel}
-                      </div>
-                    )}
-                    {item.modifications.sugarLevel && (
-                      <div className={styles.cartItemMod}>
-                        Sugar: {item.modifications.sugarLevel}
-                      </div>
-                    )}
-                    {item.modifications.addOns &&
-                      item.modifications.addOns.length > 0 && (
+                      {item.modifications.size && (
                         <div className={styles.cartItemMod}>
-                          Add-ons:{" "}
-                          {item.modifications.addOns
-                            .map((a) => a.product_name)
-                            .join(", ")}
+                          Size: {item.modifications.size}
                         </div>
                       )}
-                    <div className={styles.cartItemFooter}>
-                      <div className={styles.quantityControls}>
-                        <button
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity - 1)
-                          }
-                          className={styles.quantityButton}
-                          aria-label={`Decrease quantity of ${item.product.product_name}`}
-                        >
-                          −
-                        </button>
-                        <span
-                          className={styles.quantity}
-                          aria-label={`Quantity: ${item.quantity}`}
-                        >
-                          {item.quantity}
-                        </span>
-                        <button
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity + 1)
-                          }
-                          disabled={
-                            item.product.stock !== undefined &&
-                            item.quantity >= item.product.stock
-                          }
-                          className={styles.quantityButton}
-                          aria-label={`Increase quantity of ${item.product.product_name}`}
-                          style={{
-                            opacity:
+                      {item.modifications.iceLevel && (
+                        <div className={styles.cartItemMod}>
+                          Ice: {item.modifications.iceLevel}
+                        </div>
+                      )}
+                      {item.modifications.sugarLevel && (
+                        <div className={styles.cartItemMod}>
+                          Sugar: {item.modifications.sugarLevel}
+                        </div>
+                      )}
+                      {item.modifications.addOns &&
+                        item.modifications.addOns.length > 0 && (
+                          <div className={styles.cartItemMod}>
+                            Add-ons:{" "}
+                            {item.modifications.addOns
+                              .map((a) => a.product_name)
+                              .join(", ")}
+                          </div>
+                        )}
+                      <div className={styles.cartItemFooter}>
+                        <div className={styles.quantityControls}>
+                          <button
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity - 1)
+                            }
+                            className={styles.quantityButton}
+                            aria-label={`Decrease quantity of ${item.product.product_name}`}
+                          >
+                            −
+                          </button>
+                          <span
+                            className={styles.quantity}
+                            aria-label={`Quantity: ${item.quantity}`}
+                          >
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity + 1)
+                            }
+                            disabled={
                               item.product.stock !== undefined &&
                               item.quantity >= item.product.stock
-                                ? 0.5
-                                : 1,
-                            cursor:
-                              item.product.stock !== undefined &&
-                              item.quantity >= item.product.stock
-                                ? "not-allowed"
-                                : "pointer",
-                          }}
-                        >
-                          +
-                        </button>
+                            }
+                            className={styles.quantityButton}
+                            aria-label={`Increase quantity of ${item.product.product_name}`}
+                            style={{
+                              opacity:
+                                item.product.stock !== undefined &&
+                                item.quantity >= item.product.stock
+                                  ? 0.5
+                                  : 1,
+                              cursor:
+                                item.product.stock !== undefined &&
+                                item.quantity >= item.product.stock
+                                  ? "not-allowed"
+                                  : "pointer",
+                            }}
+                          >
+                            +
+                          </button>
+                        </div>
+                        <div className={styles.cartItemPrice}>
+                          {`$${(
+                            ((() => {
+                              const basePrice =
+                                parseFloat(item.product.price) || 0;
+                              const sizeModifier =
+                                item.modifications.size === "Small"
+                                  ? 0
+                                  : item.modifications.size === "Regular"
+                                  ? 0.5
+                                  : item.modifications.size === "Large"
+                                  ? 1.0
+                                  : 0.5;
+                              return basePrice + sizeModifier;
+                            })() +
+                              (item.modifications.addOns?.reduce(
+                                (sum, a) => sum + (parseFloat(a.price) || 0),
+                                0
+                              ) || 0)) *
+                            item.quantity
+                          ).toFixed(2)}`}
+                        </div>
                       </div>
-                      <div className={styles.cartItemPrice}>
-                        {`$${(
-                          ((() => {
-                            const basePrice =
-                              parseFloat(item.product.price) || 0;
-                            const sizeModifier =
-                              item.modifications.size === "Small"
-                                ? 0
-                                : item.modifications.size === "Regular"
-                                ? 0.5
-                                : item.modifications.size === "Large"
-                                ? 1.0
-                                : 0.5;
-                            return basePrice + sizeModifier;
-                          })() +
-                            (item.modifications.addOns?.reduce(
-                              (sum, a) => sum + (parseFloat(a.price) || 0),
-                              0
-                            ) || 0)) *
-                          item.quantity
-                        ).toFixed(2)}`}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </div>
           {cart.length > 0 && (
@@ -656,7 +665,7 @@ export default function KioskPage() {
       </div>
 
       {/* Bottom Bar - Action Buttons */}
-      <footer className={styles.bottomBar} role="contentinfo">
+      <div className={styles.bottomBar}>
         <div className={styles.leftActions}>
           <AccessibilityMenu />
           <button
@@ -699,7 +708,7 @@ export default function KioskPage() {
             Checkout (${calculateTotal().toFixed(2)})
           </button>
         </div>
-      </footer>
+      </div>
 
       {/* Modification Modal */}
       {showModificationModal && selectedProduct && (
