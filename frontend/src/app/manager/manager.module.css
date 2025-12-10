@@ -314,6 +314,26 @@
   flex: 1;
 }
 
+.editButton {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.editButton:hover {
+  color: #3b82f6;
+}
+
 .removeButton {
   background: none;
   border: none;

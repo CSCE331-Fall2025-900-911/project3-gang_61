@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { authenticateWithGoogle, authenticateWithGitHub } from "@/lib/api";
 import AccessibilityMenu from "@/components/AccessibilityMenu";
 import styles from "./page.module.css";
@@ -12,29 +13,71 @@ function LoginContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isGoogleReady, setIsGoogleReady] = useState(false);
+  const [showStaffLogin, setShowStaffLogin] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null); // 'cashier' or 'manager'
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const githubClientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
+
+  /**
+   * Handle role-based redirect after authentication
+   * @param {object} user - The authenticated user object
+   * @param {string} requestedRole - The role the user is trying to access ('cashier' or 'manager')
+   * @returns {boolean} - Whether the redirect was successful
+   */
+  const handleRoleBasedRedirect = (user, requestedRole) => {
+    const userRole = user.role;
+
+    if (requestedRole === "manager") {
+      // Only managers can access manager view
+      if (userRole === "manager") {
+        router.push("/manager");
+        return true;
+      } else {
+        // Cashiers cannot access manager view
+        setError("Access denied. You do not have manager privileges.");
+        setIsLoading(false);
+        return false;
+      }
+    } else if (requestedRole === "cashier") {
+      // Both managers and cashiers can access cashier view
+      if (userRole === "manager" || userRole === "cashier") {
+        router.push("/cashier");
+        return true;
+      } else {
+        setError("Access denied. You do not have staff privileges.");
+        setIsLoading(false);
+        return false;
+      }
+    }
+
+    // Fallback - should not reach here
+    setError("Invalid role selection.");
+    setIsLoading(false);
+    return false;
+  };
 
   /**
    * Handle GitHub OAuth callback
    */
   useEffect(() => {
     const code = searchParams.get("code");
+    const storedRole = sessionStorage.getItem("pendingRole");
     
     console.log("Search params:", {
       code: code,
+      storedRole: storedRole,
       allParams: Array.from(searchParams.entries())
     });
 
     // Process GitHub callback if we have a code
     if (code) {
       console.log("GitHub callback detected with code:", code);
-      handleGitHubCallback(code);
+      handleGitHubCallback(code, storedRole);
     }
   }, [searchParams]);
 
-  const handleGitHubCallback = async (code) => {
-    console.log("Starting GitHub authentication with code:", code);
+  const handleGitHubCallback = async (code, requestedRole) => {
+    console.log("Starting GitHub authentication with code:", code, "for role:", requestedRole);
     setIsLoading(true);
     setError(null);
     
@@ -48,19 +91,26 @@ function LoginContent() {
           sessionStorage.setItem("authToken", authResponse.token);
         }
         sessionStorage.setItem("user", JSON.stringify(authResponse.user));
-
-        const role = authResponse.user.role;
-        console.log("User role:", role);
+        
+        // Clean up pending role
+        sessionStorage.removeItem("pendingRole");
 
         // Clean up URL before navigating
         window.history.replaceState({}, document.title, "/");
 
-        if (role === "manager") {
-          router.push("/manager");
-        } else if (role === "cashier") {
-          router.push("/cashier");
+        // Handle role-based redirect
+        if (requestedRole) {
+          handleRoleBasedRedirect(authResponse.user, requestedRole);
         } else {
-          router.push("/kiosk");
+          // Fallback to default behavior if no role was stored
+          const role = authResponse.user.role;
+          if (role === "manager") {
+            router.push("/manager");
+          } else if (role === "cashier") {
+            router.push("/cashier");
+          } else {
+            router.push("/kiosk");
+          }
         }
       } else {
         throw new Error("Authentication response missing user data");
@@ -68,9 +118,9 @@ function LoginContent() {
     } catch (error) {
       console.error("GitHub Sign-In error details:", error);
       setError(error.message);
-      alert(`GitHub sign-in failed: ${error.message}`);
       // Remove code from URL
       window.history.replaceState({}, document.title, "/");
+      sessionStorage.removeItem("pendingRole");
       setIsLoading(false);
     }
   };
@@ -79,10 +129,16 @@ function LoginContent() {
    * Handle GitHub Sign-In button click
    */
   const handleGitHubSignIn = () => {
+    // Store the selected role before redirecting to GitHub
+    if (selectedRole) {
+      sessionStorage.setItem("pendingRole", selectedRole);
+    }
+    
     const redirectUri = window.location.origin;
     console.log("Redirecting to GitHub with:", {
       clientId: githubClientId,
-      redirectUri: redirectUri
+      redirectUri: redirectUri,
+      selectedRole: selectedRole
     });
     
     const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email`;
@@ -101,6 +157,7 @@ function LoginContent() {
       }
 
       setIsLoading(true);
+      setError(null);
 
       try {
         const authResponse = await authenticateWithGoogle(response.credential);
@@ -111,30 +168,44 @@ function LoginContent() {
           }
           sessionStorage.setItem("user", JSON.stringify(authResponse.user));
 
-          const role = authResponse.user.role;
-          if (role === "manager") {
-            router.push("/manager");
-          } else if (role === "cashier") {
-            router.push("/cashier");
+          // Get the selected role from state or session storage
+          const requestedRole = selectedRole || sessionStorage.getItem("pendingRole");
+          sessionStorage.removeItem("pendingRole");
+
+          if (requestedRole) {
+            handleRoleBasedRedirect(authResponse.user, requestedRole);
           } else {
-            router.push("/kiosk");
+            // Fallback to default behavior
+            const role = authResponse.user.role;
+            if (role === "manager") {
+              router.push("/manager");
+            } else if (role === "cashier") {
+              router.push("/cashier");
+            } else {
+              router.push("/kiosk");
+            }
           }
         } else {
           throw new Error("Authentication failed");
         }
       } catch (error) {
         console.error("Google Sign-In error:", error);
-        alert("Sign-in failed. Please try again.");
+        setError("Sign-in failed. Please try again.");
         setIsLoading(false);
       }
     },
-    [router]
+    [router, selectedRole]
   );
 
   /**
    * Handle custom Google button click - Use renderButton instead of prompt
    */
   const handleGoogleButtonClick = () => {
+    // Store the selected role before triggering Google sign-in
+    if (selectedRole) {
+      sessionStorage.setItem("pendingRole", selectedRole);
+    }
+    
     console.log("Google button clicked, checking if Google is ready:", isGoogleReady);
     if (window.google && window.google.accounts && window.google.accounts.id) {
       try {
@@ -167,11 +238,11 @@ function LoginContent() {
         }, 100);
       } catch (error) {
         console.error("Error triggering Google sign-in:", error);
-        alert("Failed to open Google sign-in. Please try again.");
+        setError("Failed to open Google sign-in. Please try again.");
       }
     } else {
       console.error("Google Sign-In not initialized");
-      alert("Google Sign-In is not ready yet. Please wait a moment and try again.");
+      setError("Google Sign-In is not ready yet. Please wait a moment and try again.");
     }
   };
 
@@ -220,6 +291,19 @@ function LoginContent() {
     };
   }, [googleClientId, handleGoogleSignIn]);
 
+  const handleStaffButtonClick = (role) => {
+    setSelectedRole(role);
+    setShowStaffLogin(true);
+    setError(null);
+  };
+
+  const handleBackToMain = () => {
+    setShowStaffLogin(false);
+    setSelectedRole(null);
+    setError(null);
+    sessionStorage.removeItem("pendingRole");
+  };
+
   return (
     <div className={styles.page}>
       <div className={styles.accessibilityWrapper}>
@@ -228,21 +312,20 @@ function LoginContent() {
 
       <main className={styles.container}>
         <div className={styles.loginCard}>
-          <h1 className={styles.brand}>Sharetea</h1>
-          <p className={styles.subtitle}>
-            Sign in with your account to get started.
-          </p>
+          <div className={styles.logoContainer}>
+            <Image
+              src="/sharetea.png"
+              alt="ShareTea"
+              width={200}
+              height={80}
+              className={styles.logo}
+              priority
+            />
+          </div>
 
           {error && (
-            <div style={{
-              padding: "12px",
-              marginBottom: "16px",
-              backgroundColor: "#fee2e2",
-              color: "#991b1b",
-              borderRadius: "8px",
-              fontSize: "14px"
-            }}>
-              {error}
+            <div className={styles.errorContainer}>
+              <p className={styles.errorText}>{error}</p>
             </div>
           )}
 
@@ -251,98 +334,61 @@ function LoginContent() {
               <div className={styles.spinner}></div>
               <p>Authenticating...</p>
             </div>
-          ) : (
+          ) : !showStaffLogin ? (
+            /* Main selection screen */
             <>
-              {/* TEMPORARY TESTING BUTTONS */}
-              <div
-                style={{
-                  marginBottom: "24px",
-                  paddingBottom: "24px",
-                  borderBottom: "1px solid #e5e5e5",
+              <p className={styles.subtitle}>
+                Select how you would like to continue.
+              </p>
+
+              <button
+                className={styles.kioskButton}
+                onClick={() => {
+                  sessionStorage.setItem("authToken", "guest-token");
+                  sessionStorage.setItem(
+                    "user",
+                    JSON.stringify({ role: "guest", email: "guest@sharetea.com" })
+                  );
+                  router.push("/kiosk");
                 }}
               >
+                Order as Guest
+              </button>
+
+              <div className={styles.divider}>
+                <span className={styles.dividerText}>Staff Login</span>
+              </div>
+
+              <div style={{ display: "flex", gap: "12px" }}>
                 <button
-                  style={{
-                    width: "100%",
-                    padding: "12px",
-                    marginBottom: "8px",
-                    cursor: "pointer",
-                    borderRadius: "8px",
-                    border: "1px solid #ddd",
-                    background: "#f5f5f5",
-                    color: "#333",
-                    fontSize: "16px",
-                  }}
-                  onClick={() => {
-                    sessionStorage.setItem("authToken", "test-token");
-                    sessionStorage.setItem(
-                      "user",
-                      JSON.stringify({ role: "guest", email: "test@test.com" })
-                    );
-                    router.push("/kiosk");
-                  }}
-                >
-                  Kiosk
-                </button>
-                <button
-                  style={{
-                    width: "100%",
-                    padding: "12px",
-                    marginBottom: "8px",
-                    cursor: "pointer",
-                    borderRadius: "8px",
-                    border: "1px solid #ddd",
-                    background: "#f5f5f5",
-                    color: "#333",
-                    fontSize: "16px",
-                  }}
-                  onClick={() => {
-                    sessionStorage.setItem("authToken", "test-token");
-                    sessionStorage.setItem(
-                      "user",
-                      JSON.stringify({
-                        role: "cashier",
-                        email: "cashier@test.com",
-                      })
-                    );
-                    router.push("/cashier");
-                  }}
+                  className={styles.staffLoginButton}
+                  style={{ flex: 1 }}
+                  onClick={() => handleStaffButtonClick("cashier")}
                 >
                   Cashier
                 </button>
                 <button
-                  style={{
-                    width: "100%",
-                    padding: "12px",
-                    marginBottom: "8px",
-                    cursor: "pointer",
-                    borderRadius: "8px",
-                    border: "1px solid #ddd",
-                    background: "#f5f5f5",
-                    color: "#333",
-                    fontSize: "16px",
-                  }}
-                  onClick={() => {
-                    sessionStorage.setItem("authToken", "test-token");
-                    sessionStorage.setItem(
-                      "user",
-                      JSON.stringify({
-                        role: "manager",
-                        email: "manager@test.com",
-                      })
-                    );
-                    router.push("/manager");
-                  }}
+                  className={styles.staffLoginButton}
+                  style={{ flex: 1 }}
+                  onClick={() => handleStaffButtonClick("manager")}
                 >
                   Manager
                 </button>
               </div>
+            </>
+          ) : (
+            /* Staff OAuth login screen */
+            <>
+              <p className={styles.subtitle}>
+                Sign in to continue as <strong>{selectedRole}</strong>.
+              </p>
 
               {/* Custom Google Sign-In Button */}
               {googleClientId && (
                 <button
                   onClick={handleGoogleButtonClick}
                   disabled={!isGoogleReady}
+                  className={styles.oauthButton}
                   style={{
                     width: "100%",
                     padding: "12px 24px",
@@ -423,6 +469,13 @@ function LoginContent() {
                   Sign in with GitHub
                 </button>
               )}
+
+              <button
+                className={styles.backButton}
+                onClick={handleBackToMain}
+              >
+                ← Back
+              </button>
             </>
           )}
         </div>
@@ -432,6 +485,14 @@ function LoginContent() {
 }
 
 export default function Login() {
+  // Add login-page class to body on mount, remove on unmount
+  useEffect(() => {
+    document.body.classList.add("login-page");
+    return () => {
+      document.body.classList.remove("login-page");
+    };
+  }, []);
+
   return (
     <Suspense
       fallback={

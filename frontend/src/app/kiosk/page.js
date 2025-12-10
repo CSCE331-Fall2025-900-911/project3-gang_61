@@ -15,6 +15,8 @@ const mapCategoryToDisplay = (dbCategory) => {
   const categoryMap = {
     "Milk Drink": "Milk Drinks",
     "Fruit Drink": "Fruit Drinks",
+    "Blended Drink": "Blended Drinks",
+    "Caffeinated Drink": "Caffeinated Drinks",
     Seasonal: "Seasonal",
     Side: "Sides",
   };
@@ -26,6 +28,8 @@ const getCategoryImage = (category) => {
   const imageMap = {
     "Milk Drinks": "/categories/milk.png",
     "Fruit Drinks": "/categories/fruit.png",
+    "Blended Drinks": "/categories/blended.png",
+    "Caffeinated Drinks": "/categories/caffeinated.png",
     Seasonal: "/categories/seasonal.png",
     Sides: "/categories/sides.png",
   };
@@ -55,6 +59,8 @@ export default function KioskPage() {
   const [cart, setCart] = useState([]);
   const [showModificationModal, setShowModificationModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingCartItem, setEditingCartItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [memberId, setMemberId] = useState(0);
@@ -109,6 +115,8 @@ export default function KioskPage() {
     const categorized = {
       "Milk Drinks": [],
       "Fruit Drinks": [],
+      "Blended Drinks": [],
+      "Caffeinated Drinks": [],
       Seasonal: [],
       Sides: [],
     };
@@ -175,6 +183,8 @@ export default function KioskPage() {
     if (
       category === "Milk Drink" ||
       category === "Fruit Drink" ||
+      category === "Blended Drink" ||
+      category === "Caffeinated Drink" ||
       category === "Seasonal"
     ) {
       setSelectedProduct(product);
@@ -210,10 +220,43 @@ export default function KioskPage() {
       return;
     }
     setCart(
+      cart.map((item) => {
+        if (item.id === itemId) {
+          // Cap quantity at available stock
+          const maxQuantity = item.product.stock !== undefined ? item.product.stock : Infinity;
+          const cappedQuantity = Math.min(newQuantity, maxQuantity);
+          return { ...item, quantity: cappedQuantity };
+        }
+        return item;
+      })
+    );
+  };
+
+  // Update cart item modifications
+  const updateCartItem = (itemId, modifications) => {
+    setCart(
       cart.map((item) =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
+        item.id === itemId ? { ...item, modifications } : item
       )
     );
+    setShowEditModal(false);
+    setEditingCartItem(null);
+  };
+
+  // Handle edit cart item
+  const handleEditCartItem = (item) => {
+    // Only allow editing drinks (items with modifications)
+    const category = item.product.category || "";
+    if (
+      category === "Milk Drink" ||
+      category === "Fruit Drink" ||
+      category === "Blended Drink" ||
+      category === "Caffeinated Drink" ||
+      category === "Seasonal"
+    ) {
+      setEditingCartItem(item);
+      setShowEditModal(true);
+    }
   };
 
   // Clear cart
@@ -226,9 +269,14 @@ export default function KioskPage() {
     return cart.reduce((total, item) => {
       const basePrice = parseFloat(item.product.price) || 0;
       // Calculate size price modifier
-      const sizeModifier = item.modifications.size === "Small" ? 0 :
-                          item.modifications.size === "Regular" ? 0.5 :
-                          item.modifications.size === "Large" ? 1.0 : 0.5; // Default to Regular
+      const sizeModifier =
+        item.modifications.size === "Small"
+          ? 0
+          : item.modifications.size === "Regular"
+          ? 0.5
+          : item.modifications.size === "Large"
+          ? 1.0
+          : 0.5; // Default to Regular
       const productPrice = basePrice + sizeModifier;
       const addOnsPrice =
         item.modifications.addOns?.reduce((sum, addOn) => {
@@ -251,9 +299,14 @@ export default function KioskPage() {
         items: cart.map((item) => {
           const basePrice = parseFloat(item.product.price) || 0;
           // Calculate size price modifier
-          const sizeModifier = item.modifications.size === "Small" ? 0 :
-                              item.modifications.size === "Regular" ? 0.5 :
-                              item.modifications.size === "Large" ? 1.0 : 0.5; // Default to Regular
+          const sizeModifier =
+            item.modifications.size === "Small"
+              ? 0
+              : item.modifications.size === "Regular"
+              ? 0.5
+              : item.modifications.size === "Large"
+              ? 1.0
+              : 0.5; // Default to Regular
           const finalPrice = basePrice + sizeModifier;
           return {
             product_id: item.product.product_id,
@@ -293,50 +346,64 @@ export default function KioskPage() {
 
   if (loading) {
     return (
-      <div className={styles.kioskContainer}>
-        <div className={styles.loading}>Loading products...</div>
-      </div>
+      <main className={styles.kioskContainer} role="main" aria-busy="true">
+        <div className={styles.loading} aria-live="polite">
+          Loading products...
+        </div>
+      </main>
     );
   }
 
   if (error) {
     return (
-      <div className={styles.kioskContainer}>
-        <div className={styles.error}>{error}</div>
-      </div>
+      <main className={styles.kioskContainer} role="main">
+        <div className={styles.error} role="alert">
+          {error}
+        </div>
+      </main>
     );
   }
 
   return (
-    <div className={styles.kioskContainer}>
+    <main className={styles.kioskContainer} role="main">
       <div className={styles.kioskLayout}>
         {/* Left Sidebar - Categories */}
-        <div className={styles.categoriesSidebar}>
+        <nav
+          className={styles.categoriesSidebar}
+          aria-label="Product categories"
+        >
           <h2 className={styles.sidebarTitle}>Categories</h2>
-          <div className={styles.categoryButtons}>
+          <div
+            className={styles.categoryButtons}
+            role="tablist"
+            aria-label="Category selection"
+          >
             {Object.keys(categorizedProducts)
               .filter((category) => categorizedProducts[category].length > 0)
               .map((category) => {
                 const imagePath = getCategoryImage(category);
+                const isActive = selectedCategory === category;
                 return (
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
                     className={`${styles.categoryButton} ${
-                      selectedCategory === category
-                        ? styles.categoryButtonActive
-                        : ""
+                      isActive ? styles.categoryButtonActive : ""
                     }`}
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-controls="products-panel"
                   >
                     {imagePath && (
                       <div className={styles.categoryImageContainer}>
                         <Image
                           src={imagePath}
-                          alt={category}
+                          alt="" /* Decorative image - text label provides meaning */
                           fill
                           className={styles.categoryImage}
                           style={{ objectFit: "contain" }}
                           unoptimized
+                          aria-hidden="true"
                         />
                       </div>
                     )}
@@ -345,12 +412,17 @@ export default function KioskPage() {
                 );
               })}
           </div>
-        </div>
+        </nav>
 
         {/* Middle - Products Grid */}
-        <div className={styles.productsSection}>
+        <section
+          className={styles.productsSection}
+          id="products-panel"
+          role="tabpanel"
+          aria-label={`${selectedCategory} products`}
+        >
           <h2 className={styles.sectionTitle}>{selectedCategory}</h2>
-          <div className={styles.productsGrid}>
+          <div className={styles.productsGrid} role="list">
             {categorizedProducts[selectedCategory]?.map((product) => {
               const isOutOfStock = product.stock === 0;
               const isLowStock =
@@ -358,20 +430,38 @@ export default function KioskPage() {
                 product.stock > 0 &&
                 product.stock < 25;
               return (
-                <div
+                <article
                   key={product.product_id}
                   className={`${styles.productCard} ${
                     isOutOfStock ? styles.productCardDisabled : ""
                   }`}
                   onClick={() => handleProductClick(product)}
+                  role="listitem"
+                  tabIndex={isOutOfStock ? -1 : 0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleProductClick(product);
+                    }
+                  }}
+                  aria-disabled={isOutOfStock}
+                  aria-label={`${product.product_name}, $${parseFloat(
+                    product.price
+                  ).toFixed(2)}${
+                    isOutOfStock
+                      ? ", out of stock"
+                      : isLowStock
+                      ? ", low stock"
+                      : ""
+                  }`}
                 >
                   <div className={styles.productImageWrapper}>
                     <img
                       src={getProductImageSrc(product)}
-                      alt={product.product_name}
+                      alt="" /* Product name is provided in aria-label above */
                       loading="lazy"
+                      aria-hidden="true"
                       onError={(e) => {
-                        // Fallback to placeholder if image fails to load
                         if (e.target.src !== PLACEHOLDER_IMAGE) {
                           e.target.src = PLACEHOLDER_IMAGE;
                         }
@@ -401,7 +491,7 @@ export default function KioskPage() {
                   {isLowStock && !isOutOfStock && (
                     <div className={styles.lowStockWarning}>Low Stock</div>
                   )}
-                </div>
+                </article>
               );
             })}
             {(!categorizedProducts[selectedCategory] ||
@@ -411,106 +501,163 @@ export default function KioskPage() {
               </div>
             )}
           </div>
-        </div>
+        </section>
 
         {/* Right Sidebar - Cart */}
-        <div className={styles.cartSidebar}>
+        <aside className={styles.cartSidebar} aria-label="Shopping cart">
           <h2 className={styles.sidebarTitle}>Cart</h2>
-          <div className={styles.cartItems}>
+          <div className={styles.cartItems} role="list" aria-live="polite">
             {cart.length === 0 ? (
               <div className={styles.emptyCart}>Your cart is empty</div>
             ) : (
-              cart.map((item) => (
-                <div key={item.id} className={styles.cartItem}>
-                  <div className={styles.cartItemHeader}>
-                    <span className={styles.cartItemName}>
-                      {item.product.product_name}
-                    </span>
-                    <button
-                      onClick={() => removeFromCart(item.id)}
-                      className={styles.removeButton}
-                    >
-                      ×
-                    </button>
-                  </div>
-                  {item.modifications.size && (
-                    <div className={styles.cartItemMod}>
-                      Size: {item.modifications.size}
+              cart.map((item) => {
+                const category = item.product.category || "";
+                const isDrink =
+                  category === "Milk Drink" ||
+                  category === "Fruit Drink" ||
+                  category === "Blended Drink" ||
+                  category === "Caffeinated Drink" ||
+                  category === "Seasonal";
+                return (
+                  <div
+                    key={item.id}
+                    className={styles.cartItem}
+                    role="listitem"
+                  >
+                    <div className={styles.cartItemHeader}>
+                      <span className={styles.cartItemName}>
+                        {item.product.product_name}
+                      </span>
+                      <div style={{ display: "flex", gap: "4px" }}>
+                        {isDrink && (
+                          <button
+                            onClick={() => handleEditCartItem(item)}
+                            className={styles.editButton}
+                            aria-label={`Edit ${item.product.product_name}`}
+                            title="Edit"
+                          >
+                            ✎
+                          </button>
+                        )}
+                        <span style={{ display: "inline-block", width: "8px" }} />
+
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className={styles.removeButton}
+                          aria-label={`Remove ${item.product.product_name} from cart`}
+                        >
+                          ×
+                        </button>
+                      </div>
                     </div>
-                  )}
-                  {item.modifications.iceLevel && (
-                    <div className={styles.cartItemMod}>
-                      Ice: {item.modifications.iceLevel}
-                    </div>
-                  )}
-                  {item.modifications.sugarLevel && (
-                    <div className={styles.cartItemMod}>
-                      Sugar: {item.modifications.sugarLevel}
-                    </div>
-                  )}
-                  {item.modifications.addOns &&
-                    item.modifications.addOns.length > 0 && (
+                    {item.modifications.size && (
                       <div className={styles.cartItemMod}>
-                        Add-ons:{" "}
-                        {item.modifications.addOns
-                          .map((a) => a.product_name)
-                          .join(", ")}
+                        Size: {item.modifications.size}
                       </div>
                     )}
-                  <div className={styles.cartItemFooter}>
-                    <div className={styles.quantityControls}>
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity - 1)
-                        }
-                        className={styles.quantityButton}
-                      >
-                        −
-                      </button>
-                      <span className={styles.quantity}>{item.quantity}</span>
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity + 1)
-                        }
-                        className={styles.quantityButton}
-                      >
-                        +
-                      </button>
-                    </div>
-                    <div className={styles.cartItemPrice}>
-                      {`$${(
-                        ((() => {
-                          const basePrice = parseFloat(item.product.price) || 0;
-                          const sizeModifier = item.modifications.size === "Small" ? 0 :
-                                              item.modifications.size === "Regular" ? 0.5 :
-                                              item.modifications.size === "Large" ? 1.0 : 0.5;
-                          return basePrice + sizeModifier;
-                        })() +
-                          (item.modifications.addOns?.reduce(
-                            (sum, a) => sum + (parseFloat(a.price) || 0),
-                            0
-                          ) || 0)) *
-                        item.quantity
-                      ).toFixed(2)}`}
+                    {item.modifications.iceLevel && (
+                      <div className={styles.cartItemMod}>
+                        Ice: {item.modifications.iceLevel}
+                      </div>
+                    )}
+                    {item.modifications.sugarLevel && (
+                      <div className={styles.cartItemMod}>
+                        Sugar: {item.modifications.sugarLevel}
+                      </div>
+                    )}
+                    {item.modifications.addOns &&
+                      item.modifications.addOns.length > 0 && (
+                        <div className={styles.cartItemMod}>
+                          Add-ons:{" "}
+                          {item.modifications.addOns
+                            .map((a) => a.product_name)
+                            .join(", ")}
+                        </div>
+                      )}
+                    <div className={styles.cartItemFooter}>
+                      <div className={styles.quantityControls}>
+                        <button
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity - 1)
+                          }
+                          className={styles.quantityButton}
+                          aria-label={`Decrease quantity of ${item.product.product_name}`}
+                        >
+                          −
+                        </button>
+                        <span
+                          className={styles.quantity}
+                          aria-label={`Quantity: ${item.quantity}`}
+                        >
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity + 1)
+                          }
+                          disabled={
+                            item.product.stock !== undefined &&
+                            item.quantity >= item.product.stock
+                          }
+                          className={styles.quantityButton}
+                          aria-label={`Increase quantity of ${item.product.product_name}`}
+                          style={{
+                            opacity:
+                              item.product.stock !== undefined &&
+                              item.quantity >= item.product.stock
+                                ? 0.5
+                                : 1,
+                            cursor:
+                              item.product.stock !== undefined &&
+                              item.quantity >= item.product.stock
+                                ? "not-allowed"
+                                : "pointer",
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
+                      <div className={styles.cartItemPrice}>
+                        {`$${(
+                          ((() => {
+                            const basePrice =
+                              parseFloat(item.product.price) || 0;
+                            const sizeModifier =
+                              item.modifications.size === "Small"
+                                ? 0
+                                : item.modifications.size === "Regular"
+                                ? 0.5
+                                : item.modifications.size === "Large"
+                                ? 1.0
+                                : 0.5;
+                            return basePrice + sizeModifier;
+                          })() +
+                            (item.modifications.addOns?.reduce(
+                              (sum, a) => sum + (parseFloat(a.price) || 0),
+                              0
+                            ) || 0)) *
+                          item.quantity
+                        ).toFixed(2)}`}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
           {cart.length > 0 && (
             <div className={styles.cartTotal}>
               <div className={styles.totalLabel}>Total:</div>
-              <div className={styles.totalAmount}>
+              <div className={styles.totalAmount} aria-live="polite">
                 ${calculateTotal().toFixed(2)}
               </div>
             </div>
           )}
-        </div>
+        </aside>
       </div>
 
       {/* Bottom Bar - Action Buttons */}
-      <div className={styles.bottomBar}>
+      <footer className={styles.bottomBar} role="contentinfo">
         <div className={styles.leftActions}>
           <AccessibilityMenu />
           <button
@@ -519,7 +666,13 @@ export default function KioskPage() {
             aria-label="Logout"
             title="Logout"
           >
-            <Image src="/logout.svg" alt="Logout" width={28} height={28} />
+            <Image
+              src="/logout.svg"
+              alt=""
+              width={28}
+              height={28}
+              aria-hidden="true"
+            />
           </button>
         </div>
         <div className={styles.cartActions}>
@@ -530,7 +683,13 @@ export default function KioskPage() {
             aria-label="Clear Cart"
             title="Clear Cart"
           >
-            <Image src="/delete.svg" alt="Clear Cart" width={28} height={28} />
+            <Image
+              src="/delete.svg"
+              alt=""
+              width={28}
+              height={28}
+              aria-hidden="true"
+            />
           </button>
           <button
             onClick={handleCheckout}
@@ -541,7 +700,7 @@ export default function KioskPage() {
             Checkout (${calculateTotal().toFixed(2)})
           </button>
         </div>
-      </div>
+      </footer>
 
       {/* Modification Modal */}
       {showModificationModal && selectedProduct && (
@@ -558,6 +717,21 @@ export default function KioskPage() {
         />
       )}
 
+      {/* Edit Cart Item Modal */}
+      {showEditModal && editingCartItem && (
+        <EditCartItemModal
+          cartItem={editingCartItem}
+          addOns={addOns}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingCartItem(null);
+          }}
+          onUpdate={(modifications) =>
+            updateCartItem(editingCartItem.id, modifications)
+          }
+        />
+      )}
+
       {/* Checkout Success Modal */}
       <CheckoutSuccessModal
         isOpen={showSuccessModal}
@@ -565,12 +739,201 @@ export default function KioskPage() {
         subtotal={orderSubtotal}
         viewType="kiosk"
       />
+    </main>
+  );
+}
+
+// Edit Cart Item Modal Component
+function EditCartItemModal({ cartItem, addOns, onClose, onUpdate }) {
+  const isBlendedDrink = cartItem.product.category === "Blended Drink";
+  const [iceLevel, setIceLevel] = useState(
+    isBlendedDrink ? "Regular" : (cartItem.modifications.iceLevel || "Regular")
+  );
+  const [sugarLevel, setSugarLevel] = useState(
+    cartItem.modifications.sugarLevel || "Regular"
+  );
+  const [size, setSize] = useState(cartItem.modifications.size || "Regular");
+  const [selectedAddOns, setSelectedAddOns] = useState(
+    cartItem.modifications.addOns || []
+  );
+
+  const iceLevels = ["Hot", "No Ice", "Less Ice", "Regular", "Extra Ice"];
+  const sugarLevels = ["No Sugar", "Less Sugar", "Regular", "Extra Sugar"];
+  const sizes = [
+    { name: "Small", priceModifier: 0 },
+    { name: "Regular", priceModifier: 0.5 },
+    { name: "Large", priceModifier: 1.0 },
+  ];
+
+  // Lock ice level to "Regular" for blended drinks
+  useEffect(() => {
+    if (isBlendedDrink) {
+      setIceLevel("Regular");
+    }
+  }, [isBlendedDrink]);
+
+  const toggleAddOn = (addOn) => {
+    setSelectedAddOns((prev) => {
+      const exists = prev.find((a) => a.product_id === addOn.product_id);
+      if (exists) {
+        return prev.filter((a) => a.product_id !== addOn.product_id);
+      } else {
+        return [...prev, addOn];
+      }
+    });
+  };
+
+  const handleUpdate = () => {
+    onUpdate({
+      iceLevel,
+      sugarLevel,
+      size,
+      addOns: selectedAddOns,
+    });
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>
+            Edit {cartItem.product.product_name}
+          </h2>
+          <button onClick={onClose} className={styles.modalCloseButton}>
+            ×
+          </button>
+        </div>
+
+        <div className={styles.modalBody}>
+          {/* Product Description */}
+          {cartItem.product.description && (
+            <div className={styles.productDescription}>
+              {cartItem.product.description}
+            </div>
+          )}
+
+          {/* Size Selection */}
+          <div className={styles.modificationSection}>
+            <h3 className={styles.modificationTitle}>Size</h3>
+            <div className={styles.optionButtons}>
+              {sizes.map((sizeOption) => {
+                const basePrice = parseFloat(cartItem.product.price) || 0;
+                const sizePrice = basePrice + sizeOption.priceModifier;
+                return (
+                  <button
+                    key={sizeOption.name}
+                    onClick={() => setSize(sizeOption.name)}
+                    className={`${styles.optionButton} ${
+                      size === sizeOption.name ? styles.optionButtonActive : ""
+                    }`}
+                  >
+                    <div>{sizeOption.name}</div>
+                    <div style={{ fontSize: "0.875rem", marginTop: "4px" }}>
+                      ${sizePrice.toFixed(2)}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Ice Level Selection */}
+          <div className={styles.modificationSection}>
+            <h3 className={styles.modificationTitle}>Ice Level</h3>
+            <div className={styles.optionButtons}>
+              {iceLevels.map((level) => {
+                const isDisabled = isBlendedDrink && level !== "Regular";
+                return (
+                  <button
+                    key={level}
+                    onClick={() => !isDisabled && setIceLevel(level)}
+                    disabled={isDisabled}
+                    className={`${styles.optionButton} ${
+                      iceLevel === level ? styles.optionButtonActive : ""
+                    } ${isDisabled ? styles.optionButtonDisabled : ""}`}
+                    style={isDisabled ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+                  >
+                    {level}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sugar Level Selection */}
+          <div className={styles.modificationSection}>
+            <h3 className={styles.modificationTitle}>Sugar Level</h3>
+            <div className={styles.optionButtons}>
+              {sugarLevels.map((level) => (
+                <button
+                  key={level}
+                  onClick={() => setSugarLevel(level)}
+                  className={`${styles.optionButton} ${
+                    sugarLevel === level ? styles.optionButtonActive : ""
+                  }`}
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Add-ons Selection */}
+          <div className={styles.modificationSection}>
+            <h3 className={styles.modificationTitle}>Add-ons</h3>
+            <div className={styles.addOnsGrid}>
+              {addOns.map((addOn) => {
+                const isSelected = selectedAddOns.find(
+                  (a) => a.product_id === addOn.product_id
+                );
+                return (
+                  <div key={addOn.product_id} className={styles.addOnWrapper}>
+                    <button
+                      onClick={() => toggleAddOn(addOn)}
+                      className={`${styles.addOnButton} ${
+                        isSelected ? styles.addOnButtonActive : ""
+                      }`}
+                    >
+                      <div className={styles.addOnName}>
+                        {addOn.product_name}
+                      </div>
+                      <div className={styles.addOnPrice}>
+                        +${parseFloat(addOn.price).toFixed(2)}
+                      </div>
+                    </button>
+                    {addOn.description && (
+                      <>
+                        <div className={styles.addOnInfoContainer}>
+                          <span className={styles.addOnInfoIcon}>i</span>
+                        </div>
+                        <div className={styles.addOnTooltip}>
+                          {addOn.description}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.modalFooter}>
+          <button onClick={onClose} className={styles.modalCancelButton}>
+            Cancel
+          </button>
+          <button onClick={handleUpdate} className={styles.modalAddButton}>
+            Update Item
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
 // Modification Modal Component
 function ModificationModal({ product, addOns, onClose, onAddToCart }) {
+  const isBlendedDrink = product.category === "Blended Drink";
   const [iceLevel, setIceLevel] = useState("Regular");
   const [sugarLevel, setSugarLevel] = useState("Regular");
   const [size, setSize] = useState("Regular");
@@ -583,6 +946,13 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
     { name: "Regular", priceModifier: 0.5 },
     { name: "Large", priceModifier: 1.0 },
   ];
+
+  // Lock ice level to "Regular" for blended drinks
+  useEffect(() => {
+    if (isBlendedDrink) {
+      setIceLevel("Regular");
+    }
+  }, [isBlendedDrink]);
 
   const toggleAddOn = (addOn) => {
     setSelectedAddOns((prev) => {
@@ -655,17 +1025,22 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
           <div className={styles.modificationSection}>
             <h3 className={styles.modificationTitle}>Ice Level</h3>
             <div className={styles.optionButtons}>
-              {iceLevels.map((level) => (
-                <button
-                  key={level}
-                  onClick={() => setIceLevel(level)}
-                  className={`${styles.optionButton} ${
-                    iceLevel === level ? styles.optionButtonActive : ""
-                  }`}
-                >
-                  {level}
-                </button>
-              ))}
+              {iceLevels.map((level) => {
+                const isDisabled = isBlendedDrink && level !== "Regular";
+                return (
+                  <button
+                    key={level}
+                    onClick={() => !isDisabled && setIceLevel(level)}
+                    disabled={isDisabled}
+                    className={`${styles.optionButton} ${
+                      iceLevel === level ? styles.optionButtonActive : ""
+                    } ${isDisabled ? styles.optionButtonDisabled : ""}`}
+                    style={isDisabled ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+                  >
+                    {level}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

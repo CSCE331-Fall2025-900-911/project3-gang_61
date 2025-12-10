@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import Image from "next/image";
 import styles from "./TopNavBar.module.css";
 
 // Use the same API URL pattern as the rest of the app
@@ -14,12 +16,17 @@ const buildApiUrl = (path) => {
 };
 
 export default function TopNavBar() {
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const pathname = usePathname();
+  const [currentTime, setCurrentTime] = useState(null);
   const [weather, setWeather] = useState(null);
   const [hasError, setHasError] = useState(false);
 
-  // Update time every second
+  // Initialize and update time every second (only on client)
   useEffect(() => {
+    // Set initial time
+    setCurrentTime(new Date());
+    
+    // Update time every second
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -62,6 +69,11 @@ export default function TopNavBar() {
     fetchWeather();
   }, []);
 
+  // Don't render navbar on login page - AFTER all hooks
+  if (usePathname === "/" || usePathname === "/login") {
+    return null;
+  }
+
   // Format time
   const formatTime = (date) => {
     return date.toLocaleTimeString("en-US", {
@@ -85,12 +97,28 @@ export default function TopNavBar() {
   return (
     <nav className={styles.navbar}>
       <div className={styles.leftSection}>
-        <h1 className={styles.logo}>ShareTea</h1>
+        <Image
+          src="/sharetea.png"
+          alt="ShareTea"
+          width={150}
+          height={50}
+          className={styles.logo}
+          priority
+        />
       </div>
       <div className={styles.rightSection}>
         <div className={styles.timeDate}>
-          <div className={styles.time}>{formatTime(currentTime)}</div>
-          <div className={styles.date}>{formatDate(currentTime)}</div>
+          {currentTime ? (
+            <>
+              <div className={styles.time}>{formatTime(currentTime)}</div>
+              <div className={styles.date}>{formatDate(currentTime)}</div>
+            </>
+          ) : (
+            <>
+              <div className={styles.time}>--:--:-- --</div>
+              <div className={styles.date}>Loading...</div>
+            </>
+          )}
         </div>
         <div className={styles.weather}>
           {weather ? (

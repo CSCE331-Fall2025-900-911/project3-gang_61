@@ -24,6 +24,8 @@ const mapCategoryToDisplay = (dbCategory) => {
   const categoryMap = {
     "Milk Drink": "Milk Drinks",
     "Fruit Drink": "Fruit Drinks",
+    "Blended Drink": "Blended Drinks",
+    "Caffeinated Drink": "Caffeinated Drinks",
     Seasonal: "Seasonal",
     Side: "Sides",
   };
@@ -37,6 +39,8 @@ export default function ManagerPage() {
   const [cart, setCart] = useState([]);
   const [showModificationModal, setShowModificationModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingCartItem, setEditingCartItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [memberId, setMemberId] = useState(0);
@@ -53,13 +57,15 @@ export default function ManagerPage() {
 
   // Verify that the user logged in through sign-in services
   //  verify user is a manager
-  //useRequireAuth(router);
+  useRequireAuth(router);
 
   // Categorize products using database categories
   const categorizeProducts = () => {
     const categorized = {
       "Milk Drinks": [],
       "Fruit Drinks": [],
+      "Blended Drinks": [],
+      "Caffeinated Drinks": [],
       Seasonal: [],
       Sides: [],
     };
@@ -141,6 +147,8 @@ export default function ManagerPage() {
     if (
       category === "Milk Drink" ||
       category === "Fruit Drink" ||
+      category === "Blended Drink" ||
+      category === "Caffeinated Drink" ||
       category === "Seasonal"
     ) {
       setSelectedProduct(product);
@@ -176,10 +184,44 @@ export default function ManagerPage() {
       return;
     }
     setCart(
+      cart.map((item) => {
+        if (item.id === itemId) {
+          // Cap quantity at available stock
+          const maxQuantity =
+            item.product.stock !== undefined ? item.product.stock : Infinity;
+          const cappedQuantity = Math.min(newQuantity, maxQuantity);
+          return { ...item, quantity: cappedQuantity };
+        }
+        return item;
+      })
+    );
+  };
+
+  // Update cart item modifications
+  const updateCartItem = (itemId, modifications) => {
+    setCart(
       cart.map((item) =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
+        item.id === itemId ? { ...item, modifications } : item
       )
     );
+    setShowEditModal(false);
+    setEditingCartItem(null);
+  };
+
+  // Handle edit cart item
+  const handleEditCartItem = (item) => {
+    // Only allow editing drinks (items with modifications)
+    const category = item.product.category || "";
+    if (
+      category === "Milk Drink" ||
+      category === "Fruit Drink" ||
+      category === "Blended Drink" ||
+      category === "Caffeinated Drink" ||
+      category === "Seasonal"
+    ) {
+      setEditingCartItem(item);
+      setShowEditModal(true);
+    }
   };
 
   // Clear cart
@@ -465,87 +507,129 @@ export default function ManagerPage() {
             {cart.length === 0 ? (
               <div className={styles.emptyCart}>Your cart is empty</div>
             ) : (
-              cart.map((item) => (
-                <div key={item.id} className={styles.cartItem}>
-                  <div className={styles.cartItemHeader}>
-                    <span className={styles.cartItemName}>
-                      {item.product.product_name}
-                    </span>
-                    <button
-                      onClick={() => removeFromCart(item.id)}
-                      className={styles.removeButton}
-                    >
-                      ×
-                    </button>
-                  </div>
-                  {item.modifications.size && (
-                    <div className={styles.cartItemMod}>
-                      Size: {item.modifications.size}
+              cart.map((item) => {
+                const category = item.product.category || "";
+                const isDrink =
+                  category === "Milk Drink" ||
+                  category === "Fruit Drink" ||
+                  category === "Blended Drink" ||
+                  category === "Caffeinated Drink" ||
+                  category === "Seasonal";
+                return (
+                  <div key={item.id} className={styles.cartItem}>
+                    <div className={styles.cartItemHeader}>
+                      <span className={styles.cartItemName}>
+                        {item.product.product_name}
+                      </span>
+                      <div style={{ display: "flex", gap: "4px" }}>
+                        {isDrink && (
+                          <button
+                            onClick={() => handleEditCartItem(item)}
+                            className={styles.editButton}
+                            aria-label={`Edit ${item.product.product_name}`}
+                            title="Edit"
+                          >
+                            ✎
+                          </button>
+                        )}
+                        <span
+                          style={{ display: "inline-block", width: "8px" }}
+                        />
+
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className={styles.removeButton}
+                        >
+                          ×
+                        </button>
+                      </div>
                     </div>
-                  )}
-                  {item.modifications.iceLevel && (
-                    <div className={styles.cartItemMod}>
-                      Ice: {item.modifications.iceLevel}
-                    </div>
-                  )}
-                  {item.modifications.sugarLevel && (
-                    <div className={styles.cartItemMod}>
-                      Sugar: {item.modifications.sugarLevel}
-                    </div>
-                  )}
-                  {item.modifications.addOns &&
-                    item.modifications.addOns.length > 0 && (
+                    {item.modifications.size && (
                       <div className={styles.cartItemMod}>
-                        Add-ons:{" "}
-                        {item.modifications.addOns
-                          .map((a) => a.product_name)
-                          .join(", ")}
+                        Size: {item.modifications.size}
                       </div>
                     )}
-                  <div className={styles.cartItemFooter}>
-                    <div className={styles.quantityControls}>
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity - 1)
-                        }
-                        className={styles.quantityButton}
-                      >
-                        −
-                      </button>
-                      <span className={styles.quantity}>{item.quantity}</span>
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity + 1)
-                        }
-                        className={styles.quantityButton}
-                      >
-                        +
-                      </button>
-                    </div>
-                    <div className={styles.cartItemPrice}>
-                      {`$${(
-                        ((() => {
-                          const basePrice = parseFloat(item.product.price) || 0;
-                          const sizeModifier =
-                            item.modifications.size === "Small"
-                              ? 0
-                              : item.modifications.size === "Regular"
-                              ? 0.5
-                              : item.modifications.size === "Large"
-                              ? 1.0
-                              : 0.5;
-                          return basePrice + sizeModifier;
-                        })() +
-                          (item.modifications.addOns?.reduce(
-                            (sum, a) => sum + (parseFloat(a.price) || 0),
-                            0
-                          ) || 0)) *
-                        item.quantity
-                      ).toFixed(2)}`}
+                    {item.modifications.iceLevel && (
+                      <div className={styles.cartItemMod}>
+                        Ice: {item.modifications.iceLevel}
+                      </div>
+                    )}
+                    {item.modifications.sugarLevel && (
+                      <div className={styles.cartItemMod}>
+                        Sugar: {item.modifications.sugarLevel}
+                      </div>
+                    )}
+                    {item.modifications.addOns &&
+                      item.modifications.addOns.length > 0 && (
+                        <div className={styles.cartItemMod}>
+                          Add-ons:{" "}
+                          {item.modifications.addOns
+                            .map((a) => a.product_name)
+                            .join(", ")}
+                        </div>
+                      )}
+                    <div className={styles.cartItemFooter}>
+                      <div className={styles.quantityControls}>
+                        <button
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity - 1)
+                          }
+                          className={styles.quantityButton}
+                        >
+                          −
+                        </button>
+                        <span className={styles.quantity}>{item.quantity}</span>
+                        <button
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity + 1)
+                          }
+                          disabled={
+                            item.product.stock !== undefined &&
+                            item.quantity >= item.product.stock
+                          }
+                          className={styles.quantityButton}
+                          style={{
+                            opacity:
+                              item.product.stock !== undefined &&
+                              item.quantity >= item.product.stock
+                                ? 0.5
+                                : 1,
+                            cursor:
+                              item.product.stock !== undefined &&
+                              item.quantity >= item.product.stock
+                                ? "not-allowed"
+                                : "pointer",
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
+                      <div className={styles.cartItemPrice}>
+                        {`$${(
+                          ((() => {
+                            const basePrice =
+                              parseFloat(item.product.price) || 0;
+                            const sizeModifier =
+                              item.modifications.size === "Small"
+                                ? 0
+                                : item.modifications.size === "Regular"
+                                ? 0.5
+                                : item.modifications.size === "Large"
+                                ? 1.0
+                                : 0.5;
+                            return basePrice + sizeModifier;
+                          })() +
+                            (item.modifications.addOns?.reduce(
+                              (sum, a) => sum + (parseFloat(a.price) || 0),
+                              0
+                            ) || 0)) *
+                          item.quantity
+                        ).toFixed(2)}`}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
           {cart.length > 0 && (
@@ -628,6 +712,21 @@ export default function ManagerPage() {
           }}
           onAddToCart={(modifications) =>
             addToCart(selectedProduct, modifications)
+          }
+        />
+      )}
+
+      {/* Edit Cart Item Modal */}
+      {showEditModal && editingCartItem && (
+        <EditCartItemModal
+          cartItem={editingCartItem}
+          addOns={addOns}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingCartItem(null);
+          }}
+          onUpdate={(modifications) =>
+            updateCartItem(editingCartItem.id, modifications)
           }
         />
       )}
@@ -1659,6 +1758,8 @@ function ProductFormModal({ mode, product = null, onClose, onSuccess }) {
   const categories = [
     "Milk Drink",
     "Fruit Drink",
+    "Blended Drink",
+    "Caffeinated Drink",
     "Seasonal",
     "Side",
     "Add-on",
@@ -1907,8 +2008,179 @@ function ProductFormModal({ mode, product = null, onClose, onSuccess }) {
   );
 }
 
+// Edit Cart Item Modal Component
+function EditCartItemModal({ cartItem, addOns, onClose, onUpdate }) {
+  const isBlendedDrink = cartItem.product.category === "Blended Drink";
+  const [iceLevel, setIceLevel] = useState(
+    isBlendedDrink ? "Regular" : cartItem.modifications.iceLevel || "Regular"
+  );
+  const [sugarLevel, setSugarLevel] = useState(
+    cartItem.modifications.sugarLevel || "Regular"
+  );
+  const [size, setSize] = useState(cartItem.modifications.size || "Regular");
+  const [selectedAddOns, setSelectedAddOns] = useState(
+    cartItem.modifications.addOns || []
+  );
+
+  const iceLevels = ["Hot", "No Ice", "Less Ice", "Regular", "Extra Ice"];
+  const sugarLevels = ["No Sugar", "Less Sugar", "Regular", "Extra Sugar"];
+  const sizes = [
+    { name: "Small", priceModifier: 0 },
+    { name: "Regular", priceModifier: 0.5 },
+    { name: "Large", priceModifier: 1.0 },
+  ];
+
+  // Lock ice level to "Regular" for blended drinks
+  useEffect(() => {
+    if (isBlendedDrink) {
+      setIceLevel("Regular");
+    }
+  }, [isBlendedDrink]);
+
+  const toggleAddOn = (addOn) => {
+    setSelectedAddOns((prev) => {
+      const exists = prev.find((a) => a.product_id === addOn.product_id);
+      if (exists) {
+        return prev.filter((a) => a.product_id !== addOn.product_id);
+      } else {
+        return [...prev, addOn];
+      }
+    });
+  };
+
+  const handleUpdate = () => {
+    onUpdate({
+      iceLevel,
+      sugarLevel,
+      size,
+      addOns: selectedAddOns,
+    });
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>
+            Edit {cartItem.product.product_name}
+          </h2>
+          <button onClick={onClose} className={styles.modalCloseButton}>
+            ×
+          </button>
+        </div>
+
+        <div className={styles.modalBody}>
+          {/* Size Selection */}
+          <div className={styles.modificationSection}>
+            <h3 className={styles.modificationTitle}>Size</h3>
+            <div className={styles.optionButtons}>
+              {sizes.map((sizeOption) => {
+                const basePrice = parseFloat(cartItem.product.price) || 0;
+                const sizePrice = basePrice + sizeOption.priceModifier;
+                return (
+                  <button
+                    key={sizeOption.name}
+                    onClick={() => setSize(sizeOption.name)}
+                    className={`${styles.optionButton} ${
+                      size === sizeOption.name ? styles.optionButtonActive : ""
+                    }`}
+                  >
+                    <div>{sizeOption.name}</div>
+                    <div style={{ fontSize: "0.875rem", marginTop: "4px" }}>
+                      ${sizePrice.toFixed(2)}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Ice Level Selection */}
+          <div className={styles.modificationSection}>
+            <h3 className={styles.modificationTitle}>Ice Level</h3>
+            <div className={styles.optionButtons}>
+              {iceLevels.map((level) => {
+                const isDisabled = isBlendedDrink && level !== "Regular";
+                return (
+                  <button
+                    key={level}
+                    onClick={() => !isDisabled && setIceLevel(level)}
+                    disabled={isDisabled}
+                    className={`${styles.optionButton} ${
+                      iceLevel === level ? styles.optionButtonActive : ""
+                    } ${isDisabled ? styles.optionButtonDisabled : ""}`}
+                    style={
+                      isDisabled ? { opacity: 0.2, cursor: "not-allowed" } : {}
+                    }
+                  >
+                    {level}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sugar Level Selection */}
+          <div className={styles.modificationSection}>
+            <h3 className={styles.modificationTitle}>Sugar Level</h3>
+            <div className={styles.optionButtons}>
+              {sugarLevels.map((level) => (
+                <button
+                  key={level}
+                  onClick={() => setSugarLevel(level)}
+                  className={`${styles.optionButton} ${
+                    sugarLevel === level ? styles.optionButtonActive : ""
+                  }`}
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Add-ons Selection */}
+          <div className={styles.modificationSection}>
+            <h3 className={styles.modificationTitle}>Add-ons</h3>
+            <div className={styles.addOnsGrid}>
+              {addOns.map((addOn) => {
+                const isSelected = selectedAddOns.find(
+                  (a) => a.product_id === addOn.product_id
+                );
+                return (
+                  <button
+                    key={addOn.product_id}
+                    onClick={() => toggleAddOn(addOn)}
+                    className={`${styles.addOnButton} ${
+                      isSelected ? styles.addOnButtonActive : ""
+                    }`}
+                  >
+                    <div className={styles.addOnName}>{addOn.product_name}</div>
+                    <div className={styles.addOnPrice}>
+                      +${parseFloat(addOn.price).toFixed(2)}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.modalFooter}>
+          <button onClick={onClose} className={styles.modalCancelButton}>
+            Cancel
+          </button>
+          <button onClick={handleUpdate} className={styles.modalAddButton}>
+            Update Item
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Modification Modal Component
 function ModificationModal({ product, addOns, onClose, onAddToCart }) {
+  const isBlendedDrink = product.category === "Blended Drink";
   const [iceLevel, setIceLevel] = useState("Regular");
   const [sugarLevel, setSugarLevel] = useState("Regular");
   const [size, setSize] = useState("Regular");
@@ -1921,6 +2193,13 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
     { name: "Regular", priceModifier: 0.5 },
     { name: "Large", priceModifier: 1.0 },
   ];
+
+  // Lock ice level to "Regular" for blended drinks
+  useEffect(() => {
+    if (isBlendedDrink) {
+      setIceLevel("Regular");
+    }
+  }, [isBlendedDrink]);
 
   const toggleAddOn = (addOn) => {
     setSelectedAddOns((prev) => {
@@ -1986,17 +2265,24 @@ function ModificationModal({ product, addOns, onClose, onAddToCart }) {
           <div className={styles.modificationSection}>
             <h3 className={styles.modificationTitle}>Ice Level</h3>
             <div className={styles.optionButtons}>
-              {iceLevels.map((level) => (
-                <button
-                  key={level}
-                  onClick={() => setIceLevel(level)}
-                  className={`${styles.optionButton} ${
-                    iceLevel === level ? styles.optionButtonActive : ""
-                  }`}
-                >
-                  {level}
-                </button>
-              ))}
+              {iceLevels.map((level) => {
+                const isDisabled = isBlendedDrink && level !== "Regular";
+                return (
+                  <button
+                    key={level}
+                    onClick={() => !isDisabled && setIceLevel(level)}
+                    disabled={isDisabled}
+                    className={`${styles.optionButton} ${
+                      iceLevel === level ? styles.optionButtonActive : ""
+                    } ${isDisabled ? styles.optionButtonDisabled : ""}`}
+                    style={
+                      isDisabled ? { opacity: 0.2, cursor: "not-allowed" } : {}
+                    }
+                  >
+                    {level}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

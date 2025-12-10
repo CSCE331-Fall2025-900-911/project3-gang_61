@@ -24,7 +24,14 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   filter: var(--contrast-filter, none);
-  padding-top: 80px; /* Account for fixed navbar */
+  padding-top: 80px; /* Account for fixed navbar height */
+  padding-bottom: 80px; /* Account for fixed bottom nav bar height */
+}
+
+/* Remove padding on login page */
+body.login-page {
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 * {
@@ -136,6 +143,7 @@ body.high-contrast-mode th {
 /* Large text mode */
 body.large-text-mode {
   font-size: 1.5rem;
+  padding-top: 100px;
 }
 
 body.large-text-mode h1 {

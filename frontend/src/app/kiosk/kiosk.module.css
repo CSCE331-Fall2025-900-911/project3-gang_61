@@ -33,7 +33,7 @@
 .sidebarTitle {
   font-size: 20px;
   font-weight: 600;
-  color: #333;
+  color: #1a1a1a; /* Darker color for better contrast */
   margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 2px solid #e5e5e5;
@@ -93,7 +93,7 @@
 .categoryText {
   font-size: 18px;
   font-weight: 600;
-  color: #666;
+  color: #1a1a1a; /* Darker color for better contrast */
   text-align: center;
   line-height: 1.2;
 }
@@ -171,7 +171,7 @@
 
 .productStock {
   font-size: 12px;
-  color: #666;
+  color: #4a4a4a; /* Darker color for better contrast */
   margin-top: 4px;
 }
 
@@ -201,7 +201,7 @@
   grid-column: 1 / -1;
   text-align: center;
   padding: 40px;
-  color: #999;
+  color: #4a4a4a; /* Darker color for better contrast */
   font-size: 16px;
 }
 
@@ -225,7 +225,7 @@
 .emptyCart {
   text-align: center;
   padding: 40px 20px;
-  color: #999;
+  color: #4a4a4a; /* Darker color for better contrast */
   font-size: 16px;
 }
 
@@ -251,6 +251,26 @@
   flex: 1;
 }
 
+.editButton {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.editButton:hover {
+  color: #3b82f6;
+}
+
 .removeButton {
   background: none;
   border: none;
@@ -273,7 +293,7 @@
 
 .cartItemMod {
   font-size: 12px;
-  color: #666;
+  color: #4a4a4a; /* Darker color for better contrast */
   margin-bottom: 4px;
 }
 
@@ -572,7 +592,7 @@
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #666;
+  color: #1a1a1a; /* Darker color for better contrast */
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -637,13 +657,17 @@
   font-size: 14px;
   font-weight: 500;
   text-align: center;
-  color: inherit;
+  color: #1a1a1a; /* Darker color for better contrast */
 }
 
 .addOnPrice {
   font-size: 12px;
-  opacity: 0.9;
-  color: inherit;
+  color: #4a4a4a; /* Darker color for better contrast */
+}
+
+.addOnButtonActive .addOnName,
+.addOnButtonActive .addOnPrice {
+  color: #ffffff;
 }
 
 .addOnInfoContainer {
