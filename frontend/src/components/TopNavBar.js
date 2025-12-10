@@ -97,14 +97,16 @@ export default function TopNavBar() {
   return (
     <nav className={styles.navbar}>
       <div className={styles.leftSection}>
-        <Image
-          src="/sharetea.png"
-          alt="ShareTea"
-          width={150}
-          height={50}
-          className={styles.logo}
-          priority
-        />
+        <div className={styles.logoContainer}>
+          <Image
+            src="/sharetea.png"
+            alt="ShareTea"
+            width={150}
+            height={50}
+            className={styles.logo}
+            priority
+          />
+        </div>
       </div>
       <div className={styles.rightSection}>
         <div className={styles.timeDate}>
